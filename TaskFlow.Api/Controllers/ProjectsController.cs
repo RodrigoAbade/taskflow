@@ -2,12 +2,16 @@
 using Microsoft.AspNetCore.Mvc;
 using TaskFlow.Application.DTOs.Projects;
 using TaskFlow.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 
 namespace TaskFlow.Api.Controllers;
 
+
 [ApiController]
 [Route("api/projects")]
+[Authorize]
 public class ProjectsController : ControllerBase
+
 {
     private readonly IProjectService _projectService;
 

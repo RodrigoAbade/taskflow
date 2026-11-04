@@ -171,3 +171,59 @@ Accept: application/json
 ### Verificar usuário desativado
 GET https://localhost:7291/api/users/f3e4a3da-5ecd-40d2-aea9-71fbde1f60c9
 Accept: application/json
+
+
+### Cadastrar usuário com senha
+POST https://localhost:7291/api/users
+Content-Type: application/json
+
+{
+  "name": "Usuário Autenticado",
+  "email": "auth@taskflow.com",
+  "password": "TaskFlow@2026!"
+}
+
+### Testar login com credenciais corretas
+POST https://localhost:7291/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "auth@taskflow.com",
+  "password": "TaskFlow@2026!"
+}
+
+### Testar login com senha incorreta
+POST https://localhost:7291/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "auth@taskflow.com",
+  "password": "SenhaErrada123!"
+}
+
+### Login com geração de JWT
+POST https://localhost:7291/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "auth@taskflow.com",
+  "password": "TaskFlow@2026!"
+}
+
+### Teste de acesso sem autenticação
+GET https://localhost:7291/api/projects
+Accept: application/json
+
+###
+POST https://localhost:7291/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "auth@taskflow.com",
+  "password": "TaskFlow@2026!"
+}
+
+### GET projetos com JWT
+GET https://localhost:7291/api/projects
+Accept: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1MTUzZDdlZS04OGNjLTQxMWItYjQ1Yi0zZjczZWQzMWE5NjgiLCJlbWFpbCI6ImF1dGhAdGFza2Zsb3cuY29tIiwianRpIjoiZjExOWNhNGUtODQ0ZC00MWM3LWIzNjktYmU2ZTk5NTc0NDU3IiwiZXhwIjoxNzkzNzY0MDU0LCJpc3MiOiJUYXNrRmxvdy5BcGkiLCJhdWQiOiJUYXNrRmxvdy5DbGllbnQifQ.HiTLJ9rDt_Fc_ImqgEWfpAbHOUrHnfpP1XQuIz2Kgs8

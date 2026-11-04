@@ -10,17 +10,20 @@ namespace TaskFlow.Infrastructure.Services;
 public class UserService : IUserService
 {
     private readonly TaskFlowDbContext _context;
+    private readonly IPasswordService _passwordService;
 
-    public UserService(TaskFlowDbContext context)
+    public UserService(
+        TaskFlowDbContext context,
+        IPasswordService passwordService)
     {
         _context = context;
+        _passwordService = passwordService;
     }
 
-    // Cadastrar usuário
-    public async Task<UserResponseDto> CreateAsync(
-        CreateUserDto dto)
+    public async Task<UserResponseDto> CreateAsync(CreateUserDto dto)
     {
-        var email = dto.Email?.Trim() ?? string.Empty;
+        var email = dto.Email?.Trim().ToLowerInvariant()
+            ?? string.Empty;
 
         var emailExists = await _context.Users
             .AnyAsync(u => u.Email == email);
@@ -31,6 +34,13 @@ public class UserService : IUserService
 
         var user = new User(dto.Name, email);
 
+        // Gera o hash seguro da senha
+        var passwordHash = _passwordService.HashPassword(
+            dto.Password);
+
+        // Armazena somente o hash
+        user.SetPasswordHash(passwordHash);
+
         _context.Users.Add(user);
 
         await _context.SaveChangesAsync();
@@ -38,7 +48,6 @@ public class UserService : IUserService
         return MapToDto(user);
     }
 
-    // Listar todos os usuários
     public async Task<IEnumerable<UserResponseDto>> GetAllAsync()
     {
         var users = await _context.Users
@@ -49,7 +58,6 @@ public class UserService : IUserService
         return users.Select(MapToDto).ToList();
     }
 
-    // Buscar usuário pelo ID
     public async Task<UserResponseDto?> GetByIdAsync(Guid id)
     {
         var user = await _context.Users
@@ -59,7 +67,6 @@ public class UserService : IUserService
         return user is null ? null : MapToDto(user);
     }
 
-    // Desativar usuário
     public async Task<bool> DeactivateAsync(Guid id)
     {
         var user = await _context.Users
@@ -75,7 +82,6 @@ public class UserService : IUserService
         return true;
     }
 
-    // Converter entidade para DTO
     private static UserResponseDto MapToDto(User user)
     {
         return new UserResponseDto
