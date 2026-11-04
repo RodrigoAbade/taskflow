@@ -1,0 +1,21 @@
+
+POST https://localhost:7291/api/projects
+Content-Type: application/json
+
+{
+  "name": "TaskFlow API",
+  "description": "Sistema de gerenciamento de projetos e tarefas desenvolvido em .NET 10"
+}
+
+
+###
+
+GET https://localhost:7291/api/projects
+Accept: application/json
+
+
+###
+
+GET https://localhost:7291/api/projects/c720c6da-e5e0-4ae8-beb4-c8a368df2281
+Accept: application/json
+
