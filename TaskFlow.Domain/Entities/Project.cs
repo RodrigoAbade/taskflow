@@ -49,6 +49,11 @@ public class Project
         Name = newName.Trim();
     }
 
+    public void UpdateDescription(string description)
+    {
+        Description = description?.Trim() ?? string.Empty;
+    }
+
     public void Deactivate()
     {
         if (!IsActive)

@@ -1,8 +1,7 @@
 ﻿
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using TaskFlow.Domain.Entities;
-using TaskFlow.Infrastructure.Data;
+using TaskFlow.Application.DTOs.Projects;
+using TaskFlow.Application.Interfaces;
 
 namespace TaskFlow.Api.Controllers;
 
@@ -10,82 +9,46 @@ namespace TaskFlow.Api.Controllers;
 [Route("api/projects")]
 public class ProjectsController : ControllerBase
 {
-    private readonly TaskFlowDbContext _context;
+    private readonly IProjectService _projectService;
 
-    public ProjectsController(TaskFlowDbContext context)
+    public ProjectsController(IProjectService projectService)
     {
-        _context = context;
+        _projectService = projectService;
     }
 
     // POST: api/projects
-    // Cadastrar um novo projeto
     [HttpPost]
     public async Task<IActionResult> Create(
-        [FromBody] CreateProjectRequest request)
+        [FromBody] CreateProjectDto dto)
     {
-        if (string.IsNullOrWhiteSpace(request.Name))
+        if (string.IsNullOrWhiteSpace(dto.Name))
             return BadRequest("O nome é obrigatório.");
 
-        if (request.Name.Trim().Length > 100)
+        if (dto.Name.Trim().Length > 100)
             return BadRequest(
                 "O nome não pode ultrapassar 100 caracteres.");
 
-        var project = new Project(
-            request.Name,
-            request.Description ?? string.Empty);
-
-        _context.Projects.Add(project);
-
-        await _context.SaveChangesAsync();
+        var project = await _projectService.CreateAsync(dto);
 
         return Created(
             $"/api/projects/{project.Id}",
-            new
-            {
-                project.Id,
-                project.Name,
-                project.Description,
-                project.CreatedAt,
-                project.IsActive
-            });
+            project);
     }
 
     // GET: api/projects
-    // Listar todos os projetos
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var projects = await _context.Projects
-            .AsNoTracking()
-            .Select(p => new
-            {
-                p.Id,
-                p.Name,
-                p.Description,
-                p.CreatedAt,
-                p.IsActive
-            })
-            .ToListAsync();
+        var projects = await _projectService.GetAllAsync();
 
         return Ok(projects);
     }
 
-
-[HttpGet("{id:guid}")]
+    // GET: api/projects/{id}
+    [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
-        var project = await _context.Projects
-            .AsNoTracking()
-            .Where(p => p.Id == id)
-            .Select(p => new
-            {
-                p.Id,
-                p.Name,
-                p.Description,
-                p.CreatedAt,
-                p.IsActive
-            })
-            .FirstOrDefaultAsync();
+        var project = await _projectService.GetByIdAsync(id);
 
         if (project is null)
             return NotFound(new
@@ -94,11 +57,47 @@ public class ProjectsController : ControllerBase
             });
 
         return Ok(project);
-    } 
+    }
+
+    // PUT: api/projects/{id}
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> Update(
+        Guid id,
+        [FromBody] UpdateProjectDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.Name))
+            return BadRequest("O nome é obrigatório.");
+
+        if (dto.Name.Trim().Length > 100)
+            return BadRequest(
+                "O nome não pode ultrapassar 100 caracteres.");
+
+        var project = await _projectService.UpdateAsync(id, dto);
+
+        if (project is null)
+            return NotFound(new
+            {
+                message = "Projeto não encontrado."
+            });
+
+
+        return Ok(project);
+    }
+
+    // DELETE: api/projects/{id}
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Deactivate(Guid id)
+    {
+        var success = await _projectService.DeactivateAsync(id);
+
+        if (!success)
+        {
+            return NotFound(new
+            {
+                message = "Projeto não encontrado."
+            });
+        }
+
+        return NoContent();
+    }
 }
-
-
-
-public record CreateProjectRequest(
-    string Name,
-    string? Description);

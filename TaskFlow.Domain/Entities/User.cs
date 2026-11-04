@@ -6,6 +6,7 @@ public class User
     public Guid Id { get; private set; }
     public string Name { get; private set; }
     public string Email { get; private set; }
+    public string? PasswordHash { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public bool IsActive { get; private set; }
 
@@ -32,7 +33,8 @@ public class User
                 "O nome não pode ultrapassar 100 caracteres.",
                 nameof(name));
 
-        if (!System.Net.Mail.MailAddress.TryCreate(email.Trim(), out var address)
+        if (!System.Net.Mail.MailAddress.TryCreate(
+                email.Trim(), out var address)
             || address.Address != email.Trim())
             throw new ArgumentException(
                 "O e-mail informado é inválido.",
@@ -41,6 +43,7 @@ public class User
         Id = Guid.NewGuid();
         Name = name.Trim();
         Email = email.Trim().ToLowerInvariant();
+        PasswordHash = null;
         CreatedAt = DateTime.UtcNow;
         IsActive = true;
     }
@@ -58,6 +61,16 @@ public class User
                 nameof(newName));
 
         Name = newName.Trim();
+    }
+
+    public void SetPasswordHash(string passwordHash)
+    {
+        if (string.IsNullOrWhiteSpace(passwordHash))
+            throw new ArgumentException(
+                "O hash da senha é obrigatório.",
+                nameof(passwordHash));
+
+        PasswordHash = passwordHash;
     }
 
     public void Deactivate()

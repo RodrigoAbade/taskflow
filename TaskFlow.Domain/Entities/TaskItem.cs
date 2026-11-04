@@ -58,6 +58,35 @@ public class TaskItem
         DueDate = dueDate;
     }
 
+    // NOVO: Atualizar informações da tarefa
+    public void UpdateDetails(
+        string title,
+        string description,
+        TaskPriority priority,
+        DateTime? dueDate)
+    {
+        if (Status is TaskState.Completed or TaskState.Cancelled)
+            throw new InvalidOperationException(
+                "Não é possível editar uma tarefa encerrada.");
+
+        if (string.IsNullOrWhiteSpace(title))
+            throw new ArgumentException("O título é obrigatório.");
+
+        if (title.Trim().Length > 150)
+            throw new ArgumentException("O título é muito longo.");
+
+        if (!Enum.IsDefined(priority))
+            throw new ArgumentException("Prioridade inválida.");
+
+        if (dueDate.HasValue && dueDate.Value <= DateTime.UtcNow)
+            throw new ArgumentException("O prazo deve ser futuro.");
+
+        Title = title.Trim();
+        Description = description?.Trim() ?? string.Empty;
+        Priority = priority;
+        DueDate = dueDate;
+    }
+
     public void AssignTo(Guid userId)
     {
         if (userId == Guid.Empty)

@@ -7,15 +7,167 @@ Content-Type: application/json
   "description": "Sistema de gerenciamento de projetos e tarefas desenvolvido em .NET 10"
 }
 
-
 ###
 
 GET https://localhost:7291/api/projects
 Accept: application/json
-
 
 ###
 
 GET https://localhost:7291/api/projects/c720c6da-e5e0-4ae8-beb4-c8a368df2281
 Accept: application/json
 
+###
+
+GET https://localhost:7291/api/projects/00000000-0000-0000-0000-000000000000
+Accept: application/json
+
+###
+
+POST https://localhost:7291/api/projects
+Content-Type: application/json
+
+{
+  "name": "Projeto Teste Service",
+  "description": "Testando a arquitetura em camadas"
+}
+
+###
+GET https://localhost:7291/api/projects/3a11f97f-1b60-4cf5-ad2b-2704a38c88f2
+Accept: application/json
+
+###
+PUT https://localhost:7291/api/projects/3a11f97f-1b60-4cf5-ad2b-2704a38c88f2
+Content-Type: application/json
+
+{
+  "name": "TaskFlow Backend",
+  "description": "API profissional desenvolvida em .NET 10"
+}
+
+###
+GET https://localhost:7291/api/projects/3a11f97f-1b60-4cf5-ad2b-2704a38c88f2
+Accept: application/json
+
+###
+DELETE https://localhost:7291/api/projects/3a11f97f-1b60-4cf5-ad2b-2704a38c88f2
+Accept: application/json
+
+###
+GET https://localhost:7291/api/projects/3a11f97f-1b60-4cf5-ad2b-2704a38c88f2
+Accept: application/json
+
+
+### Criar primeira tarefa
+POST https://localhost:7291/api/tasks
+Content-Type: application/json
+
+{
+  "projectId": "c720c6da-e5e0-4ae8-beb4-c8a368df2281",
+  "title": "Implementar autenticação JWT",
+  "description": "Adicionar autenticação JWT à API TaskFlow",
+  "priority": 3,
+  "dueDate": null
+}
+
+### Buscar tarefa pelo ID
+GET https://localhost:7291/api/tasks/d08f7eb9-b4cd-4da4-9276-1d59845e28a1
+Accept: application/json
+
+
+### Listar todas as tarefas
+GET https://localhost:7291/api/tasks
+Accept: application/json
+
+
+### Listar tarefas de um projeto específico
+GET https://localhost:7291/api/tasks/project/c720c6da-e5e0-4ae8-beb4-c8a368df2281
+Accept: application/json
+  
+### Atualizar tarefa existente
+PUT https://localhost:7291/api/tasks/d08f7eb9-b4cd-4da4-9276-1d59845e28a1
+Content-Type: application/json
+
+{
+  "title": "Implementar JWT com Refresh Token",
+  "description": "Criar login, geração de tokens e renovação de autenticação",
+  "priority": 4,
+  "dueDate": null
+}
+
+### Verificar atualização da tarefa
+GET https://localhost:7291/api/tasks/d08f7eb9-b4cd-4da4-9276-1d59845e28a1
+Accept: application/json
+
+
+### Iniciar tarefa
+PATCH https://localhost:7291/api/tasks/d08f7eb9-b4cd-4da4-9276-1d59845e28a1/start
+Accept: application/json
+
+
+### Concluir tarefa
+PATCH https://localhost:7291/api/tasks/d08f7eb9-b4cd-4da4-9276-1d59845e28a1/complete
+Accept: application/json
+
+  
+### Testar cancelamento de tarefa concluída
+PATCH https://localhost:7291/api/tasks/d08f7eb9-b4cd-4da4-9276-1d59845e28a1/cancel
+Accept: application/json
+
+
+### Criar tarefa para testar cancelamento
+POST https://localhost:7291/api/tasks
+Content-Type: application/json
+
+{
+  "projectId": "c720c6da-e5e0-4ae8-beb4-c8a368df2281",
+  "title": "Configurar envio de e-mails",
+  "description": "Implementar notificações por e-mail no TaskFlow",
+  "priority": 2,
+  "dueDate": null
+}
+
+
+### Cancelar tarefa pendente
+PATCH https://localhost:7291/api/tasks/0a1c5400-7251-41ab-a295-732597f7cb0a/cancel
+Accept: application/json
+
+
+### Cadastrar primeiro usuário
+POST https://localhost:7291/api/users
+Content-Type: application/json
+
+{
+  "name": "Usuário Teste",
+  "email": "teste@example.com"
+}
+
+  
+### Consultar usuário pelo ID
+GET https://localhost:7291/api/users/f3e4a3da-5ecd-40d2-aea9-71fbde1f60c9
+Accept: application/json
+
+  
+### Listar todos os usuários
+GET https://localhost:7291/api/users
+Accept: application/json
+
+
+### Testar cadastro com e-mail duplicado
+POST https://localhost:7291/api/users
+Content-Type: application/json
+
+{
+  "name": "Segundo Usuário",
+  "email": "teste@example.com"
+}
+
+
+### Desativar usuário
+DELETE https://localhost:7291/api/users/f3e4a3da-5ecd-40d2-aea9-71fbde1f60c9
+Accept: application/json
+
+
+### Verificar usuário desativado
+GET https://localhost:7291/api/users/f3e4a3da-5ecd-40d2-aea9-71fbde1f60c9
+Accept: application/json

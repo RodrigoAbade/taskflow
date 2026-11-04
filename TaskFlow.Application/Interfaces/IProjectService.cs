@@ -11,4 +11,10 @@ public interface IProjectService
     Task<IEnumerable<ProjectResponseDto>> GetAllAsync();
 
     Task<ProjectResponseDto?> GetByIdAsync(Guid id);
+
+    Task<ProjectResponseDto?> UpdateAsync(
+        Guid id,
+        UpdateProjectDto dto);
+
+    Task<bool> DeactivateAsync(Guid id);
 }

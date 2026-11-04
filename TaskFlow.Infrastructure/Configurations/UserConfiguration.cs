@@ -24,6 +24,11 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.HasIndex(u => u.Email)
             .IsUnique();
 
+        // Hash da senha para autenticação
+        builder.Property(u => u.PasswordHash)
+            .HasMaxLength(500)
+            .IsRequired(false);
+
         builder.Property(u => u.CreatedAt)
             .IsRequired();
 
