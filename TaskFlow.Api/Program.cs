@@ -1,13 +1,38 @@
 
-using System.Text;
+using System;
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using TaskFlow.Api.Exceptions;
 using TaskFlow.Application.Interfaces;
 using TaskFlow.Infrastructure.Data;
 using TaskFlow.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// ========================================
+// CONTROLLERS E OPENAPI
+// ========================================
+
+builder.Services.AddControllers();
+builder.Services.AddOpenApi();
+
+// ========================================
+// TRATAMENTO GLOBAL DE ERROS
+// ========================================
+
+builder.Services.AddProblemDetails();
+
+builder.Services.AddExceptionHandler<
+    GlobalExceptionHandler>();
+
+// ========================================
+// BANCO DE DADOS
+// ========================================
 
 var connectionString = builder.Configuration
     .GetConnectionString("DefaultConnection");
@@ -15,18 +40,32 @@ var connectionString = builder.Configuration
 builder.Services.AddDbContext<TaskFlowDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-builder.Services.AddControllers();
-builder.Services.AddOpenApi();
+// ========================================
+// SERVIÇOS DA APLICAÇÃO
+// ========================================
 
-// Serviços da aplicação
-builder.Services.AddScoped<IProjectService, ProjectService>();
-builder.Services.AddScoped<ITaskService, TaskService>();
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IPasswordService, PasswordService>();
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<
+    IProjectService, ProjectService>();
 
-// Configuração JWT
+builder.Services.AddScoped<
+    ITaskService, TaskService>();
+
+builder.Services.AddScoped<
+    IUserService, UserService>();
+
+builder.Services.AddScoped<
+    IPasswordService, PasswordService>();
+
+builder.Services.AddScoped<
+    IAuthService, AuthService>();
+
+builder.Services.AddScoped<
+    ITokenService, TokenService>();
+
+// ========================================
+// CONFIGURAÇÃO JWT
+// ========================================
+
 var jwtKey = builder.Configuration["Jwt:Key"]
     ?? throw new InvalidOperationException(
         "A chave JWT não foi configurada.");
@@ -40,7 +79,8 @@ var jwtAudience = builder.Configuration["Jwt:Audience"]
         "A audiência JWT não foi configurada.");
 
 builder.Services
-    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddAuthentication(
+        JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
         options.MapInboundClaims = false;
@@ -52,24 +92,32 @@ builder.Services
                 var userIdClaim = context.Principal?
                     .FindFirst("sub")?.Value;
 
-                if (!Guid.TryParse(userIdClaim, out var userId))
+                if (!Guid.TryParse(
+                    userIdClaim, out var userId))
                 {
-                    context.Fail("Token sem identificação válida.");
+                    context.Fail(
+                        "Token sem identificação válida.");
+
                     return;
                 }
 
-                var dbContext = context.HttpContext.RequestServices
-                    .GetRequiredService<TaskFlowDbContext>();
+                var dbContext = context.HttpContext
+                    .RequestServices
+                    .GetRequiredService<
+                        TaskFlowDbContext>();
 
                 var isActive = await dbContext.Users
                     .AsNoTracking()
                     .AnyAsync(
-                        user => user.Id == userId && user.IsActive,
+                        user =>
+                            user.Id == userId &&
+                            user.IsActive,
                         context.HttpContext.RequestAborted);
 
                 if (!isActive)
                 {
-                    context.Fail("Usuário inexistente ou desativado.");
+                    context.Fail(
+                        "Usuário inexistente ou desativado.");
                 }
             }
         };
@@ -87,26 +135,116 @@ builder.Services
                 ClockSkew = TimeSpan.Zero,
 
                 ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(
-                    Convert.FromBase64String(jwtKey))
+
+                IssuerSigningKey =
+                    new SymmetricSecurityKey(
+                        Convert.FromBase64String(jwtKey))
             };
     });
 
 builder.Services.AddAuthorization();
 
+// ========================================
+// RATE LIMITING - PROTEÇÃO DO LOGIN
+// ========================================
+
+builder.Services.AddRateLimiter(options =>
+{
+    // Limite de 5 tentativas por minuto, por IP
+    options.AddPolicy("login", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: context.Connection
+                .RemoteIpAddress?
+                .MapToIPv6()
+                .ToString() ?? "unknown",
+
+            factory: _ =>
+                new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 5,
+
+                    Window =
+                        TimeSpan.FromMinutes(1),
+
+                    QueueLimit = 0,
+
+                    AutoReplenishment = true
+                }));
+
+    // Resposta HTTP para limite excedido
+    options.RejectionStatusCode =
+        StatusCodes.Status429TooManyRequests;
+
+    options.OnRejected = async (
+        context, cancellationToken) =>
+    {
+        var response = context.HttpContext.Response;
+
+        response.StatusCode =
+            StatusCodes.Status429TooManyRequests;
+
+        var problem = new ProblemDetails
+        {
+            Status = 429,
+
+            Title = "Muitas requisições",
+
+            Detail =
+                "Limite de tentativas atingido. " +
+                "Aguarde um minuto antes de tentar novamente."
+        };
+
+        await response.WriteAsJsonAsync(
+            problem,
+            options: new System.Text.Json.JsonSerializerOptions(
+                System.Text.Json.JsonSerializerDefaults.Web),
+            contentType: "application/problem+json",
+            cancellationToken: cancellationToken);
+    };
+});
+
+// ========================================
+// CONSTRUÇÃO DA APLICAÇÃO
+// ========================================
+
 var app = builder.Build();
 
+// ========================================
+// MIDDLEWARES
+// ========================================
+
+// Tratamento global de exceções
+app.UseExceptionHandler();
+
+// Documentação OpenAPI
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
 
+// Redirecionamento HTTPS
 app.UseHttpsRedirection();
 
-// Primeiro autentica, depois autoriza
+// Roteamento
+app.UseRouting();
+
+// Proteção contra excesso de requisições
+app.UseRateLimiter();
+
+// Autenticação JWT
 app.UseAuthentication();
+
+// Autorização
 app.UseAuthorization();
 
+// Controllers
 app.MapControllers();
 
+// ========================================
+// INICIALIZAÇÃO
+// ========================================
+
 app.Run();
+
+// Necessário para testes de integração
+public partial class Program { }
