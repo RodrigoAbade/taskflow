@@ -1,8 +1,9 @@
 ﻿
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TaskFlow.Api.Helpers;
 using TaskFlow.Application.DTOs.Users;
 using TaskFlow.Application.Interfaces;
-using Microsoft.AspNetCore.Authorization;
 
 namespace TaskFlow.Api.Controllers;
 
@@ -21,19 +22,16 @@ public class UsersController : ControllerBase
     // POST: api/users
     [AllowAnonymous]
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] CreateUserDto dto)
+    public async Task<IActionResult> Create(
+        [FromBody] CreateUserDto dto)
     {
         if (string.IsNullOrWhiteSpace(dto.Name))
-            return BadRequest(new
-            {
-                message = "O nome é obrigatório."
-            });
+            return ApiErrors.BadRequest(
+                "O nome é obrigatório.");
 
         if (string.IsNullOrWhiteSpace(dto.Email))
-            return BadRequest(new
-            {
-                message = "O e-mail é obrigatório."
-            });
+            return ApiErrors.BadRequest(
+                "O e-mail é obrigatório.");
 
         try
         {
@@ -46,24 +44,13 @@ public class UsersController : ControllerBase
         }
         catch (ArgumentException ex)
         {
-            return BadRequest(new { message = ex.Message });
+            return ApiErrors.BadRequest(ex.Message);
         }
         catch (InvalidOperationException ex)
         {
-            return Conflict(new { message = ex.Message });
+            return ApiErrors.Conflict(ex.Message);
         }
     }
-
-    // GET: api/users
-    /*
-    [HttpGet]
-    public async Task<IActionResult> GetAll()
-    {
-        var users = await _userService.GetAllAsync();
-
-        return Ok(users);
-    }
-    */
 
     // GET: api/users/{id}
     [HttpGet("{id:guid}")]
@@ -71,8 +58,12 @@ public class UsersController : ControllerBase
     {
         var userIdClaim = User.FindFirst("sub")?.Value;
 
-        if (!Guid.TryParse(userIdClaim, out var authenticatedUserId))
+        if (!Guid.TryParse(
+            userIdClaim,
+            out var authenticatedUserId))
+        {
             return Unauthorized();
+        }
 
         if (id != authenticatedUserId)
             return Forbid();
@@ -80,10 +71,8 @@ public class UsersController : ControllerBase
         var user = await _userService.GetByIdAsync(id);
 
         if (user is null)
-            return NotFound(new
-            {
-                message = "Usuário não encontrado."
-            });
+            return ApiErrors.NotFound(
+                "Usuário não encontrado.");
 
         return Ok(user);
     }
@@ -94,8 +83,12 @@ public class UsersController : ControllerBase
     {
         var userIdClaim = User.FindFirst("sub")?.Value;
 
-        if (!Guid.TryParse(userIdClaim, out var authenticatedUserId))
+        if (!Guid.TryParse(
+            userIdClaim,
+            out var authenticatedUserId))
+        {
             return Unauthorized();
+        }
 
         if (id != authenticatedUserId)
             return Forbid();
@@ -105,16 +98,14 @@ public class UsersController : ControllerBase
             var success = await _userService.DeactivateAsync(id);
 
             if (!success)
-                return NotFound(new
-                {
-                    message = "Usuário não encontrado."
-                });
+                return ApiErrors.NotFound(
+                    "Usuário não encontrado.");
 
             return NoContent();
         }
         catch (InvalidOperationException ex)
         {
-            return Conflict(new { message = ex.Message });
+            return ApiErrors.Conflict(ex.Message);
         }
     }
 }

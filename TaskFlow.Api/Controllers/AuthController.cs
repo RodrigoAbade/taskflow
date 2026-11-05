@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using TaskFlow.Application.DTOs.Auth;
 using TaskFlow.Application.Interfaces;
+using TaskFlow.Api.Helpers;
 
 namespace TaskFlow.Api.Controllers;
 
@@ -29,10 +30,8 @@ public class AuthController : ControllerBase
 
         if (user is null)
         {
-            return Unauthorized(new
-            {
-                message = "E-mail ou senha inválidos."
-            });
+            return ApiErrors.Unauthorized(
+                "E-mail ou senha inválidos.");
         }
 
         var token = _tokenService.GenerateToken(user);

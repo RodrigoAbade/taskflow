@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TaskFlow.Application.DTOs.Tasks;
 using TaskFlow.Application.Interfaces;
+using TaskFlow.Api.Helpers;
 
 namespace TaskFlow.Api.Controllers;
 
@@ -27,7 +28,9 @@ public class TasksController : ControllerBase
         if (claim is null ||
             !Guid.TryParse(claim.Value, out var userId) ||
             userId == Guid.Empty)
+        {
             return null;
+        }
 
         return userId;
     }
@@ -42,16 +45,12 @@ public class TasksController : ControllerBase
             return Unauthorized();
 
         if (dto.ProjectId == Guid.Empty)
-            return BadRequest(new
-            {
-                message = "O projeto é obrigatório."
-            });
+            return ApiErrors.BadRequest(
+                "O projeto é obrigatório.");
 
         if (string.IsNullOrWhiteSpace(dto.Title))
-            return BadRequest(new
-            {
-                message = "O título é obrigatório."
-            });
+            return ApiErrors.BadRequest(
+                "O título é obrigatório.");
 
         try
         {
@@ -65,14 +64,12 @@ public class TasksController : ControllerBase
         }
         catch (KeyNotFoundException)
         {
-            return NotFound(new
-            {
-                message = "Projeto não encontrado."
-            });
+            return ApiErrors.NotFound(
+                "Projeto não encontrado.");
         }
         catch (ArgumentException ex)
         {
-            return BadRequest(new { message = ex.Message });
+            return ApiErrors.BadRequest(ex.Message);
         }
     }
 
@@ -102,10 +99,8 @@ public class TasksController : ControllerBase
             id, userId.Value);
 
         if (task is null)
-            return NotFound(new
-            {
-                message = "Tarefa não encontrada."
-            });
+            return ApiErrors.NotFound(
+                "Tarefa não encontrada.");
 
         return Ok(task);
     }
@@ -136,16 +131,12 @@ public class TasksController : ControllerBase
             return Unauthorized();
 
         if (string.IsNullOrWhiteSpace(dto.Title))
-            return BadRequest(new
-            {
-                message = "O título é obrigatório."
-            });
+            return ApiErrors.BadRequest(
+                "O título é obrigatório.");
 
         if (dto.Title.Trim().Length > 150)
-            return BadRequest(new
-            {
-                message = "O título não pode ultrapassar 150 caracteres."
-            });
+            return ApiErrors.BadRequest(
+                "O título não pode ultrapassar 150 caracteres.");
 
         try
         {
@@ -153,20 +144,18 @@ public class TasksController : ControllerBase
                 id, dto, userId.Value);
 
             if (task is null)
-                return NotFound(new
-                {
-                    message = "Tarefa não encontrada."
-                });
+                return ApiErrors.NotFound(
+                    "Tarefa não encontrada.");
 
             return Ok(task);
         }
         catch (ArgumentException ex)
         {
-            return BadRequest(new { message = ex.Message });
+            return ApiErrors.BadRequest(ex.Message);
         }
         catch (InvalidOperationException ex)
         {
-            return Conflict(new { message = ex.Message });
+            return ApiErrors.Conflict(ex.Message);
         }
     }
 
@@ -184,16 +173,14 @@ public class TasksController : ControllerBase
                 id, userId.Value);
 
             if (task is null)
-                return NotFound(new
-                {
-                    message = "Tarefa não encontrada."
-                });
+                return ApiErrors.NotFound(
+                    "Tarefa não encontrada.");
 
             return Ok(task);
         }
         catch (InvalidOperationException ex)
         {
-            return Conflict(new { message = ex.Message });
+            return ApiErrors.Conflict(ex.Message);
         }
     }
 
@@ -211,16 +198,14 @@ public class TasksController : ControllerBase
                 id, userId.Value);
 
             if (task is null)
-                return NotFound(new
-                {
-                    message = "Tarefa não encontrada."
-                });
+                return ApiErrors.NotFound(
+                    "Tarefa não encontrada.");
 
             return Ok(task);
         }
         catch (InvalidOperationException ex)
         {
-            return Conflict(new { message = ex.Message });
+            return ApiErrors.Conflict(ex.Message);
         }
     }
 
@@ -238,16 +223,14 @@ public class TasksController : ControllerBase
                 id, userId.Value);
 
             if (task is null)
-                return NotFound(new
-                {
-                    message = "Tarefa não encontrada."
-                });
+                return ApiErrors.NotFound(
+                    "Tarefa não encontrada.");
 
             return Ok(task);
         }
         catch (InvalidOperationException ex)
         {
-            return Conflict(new { message = ex.Message });
+            return ApiErrors.Conflict(ex.Message);
         }
     }
 }

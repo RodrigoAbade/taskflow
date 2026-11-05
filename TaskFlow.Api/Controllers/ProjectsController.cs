@@ -1,8 +1,10 @@
-﻿using System.Security.Claims;
+﻿
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TaskFlow.Application.DTOs.Projects;
 using TaskFlow.Application.Interfaces;
+using TaskFlow.Api.Helpers;
 
 namespace TaskFlow.Api.Controllers;
 
@@ -38,19 +40,18 @@ public class ProjectsController : ControllerBase
         [FromBody] CreateProjectDto dto)
     {
         if (string.IsNullOrWhiteSpace(dto.Name))
-            return BadRequest("O nome é obrigatório.");
+            return ApiErrors.BadRequest(
+                "O nome é obrigatório.");
 
         if (dto.Name.Trim().Length > 100)
-            return BadRequest(
+            return ApiErrors.BadRequest(
                 "O nome não pode ultrapassar 100 caracteres.");
 
         var userId = GetAuthenticatedUserId();
 
         if (userId is null)
-            return Unauthorized(new
-            {
-                message = "Token inválido: usuário não identificado."
-            });
+            return ApiErrors.Unauthorized(
+                "Token inválido: usuário não identificado.");
 
         var project = await _projectService.CreateAsync(
             dto, userId.Value);
@@ -84,10 +85,8 @@ public class ProjectsController : ControllerBase
             id, userId.Value);
 
         if (project is null)
-            return NotFound(new
-            {
-                message = "Projeto não encontrado."
-            });
+            return ApiErrors.NotFound(
+                "Projeto não encontrado.");
 
         return Ok(project);
     }
@@ -98,10 +97,11 @@ public class ProjectsController : ControllerBase
         [FromBody] UpdateProjectDto dto)
     {
         if (string.IsNullOrWhiteSpace(dto.Name))
-            return BadRequest("O nome é obrigatório.");
+            return ApiErrors.BadRequest(
+                "O nome é obrigatório.");
 
         if (dto.Name.Trim().Length > 100)
-            return BadRequest(
+            return ApiErrors.BadRequest(
                 "O nome não pode ultrapassar 100 caracteres.");
 
         var userId = GetAuthenticatedUserId();
@@ -113,10 +113,8 @@ public class ProjectsController : ControllerBase
             id, dto, userId.Value);
 
         if (project is null)
-            return NotFound(new
-            {
-                message = "Projeto não encontrado."
-            });
+            return ApiErrors.NotFound(
+                "Projeto não encontrado.");
 
         return Ok(project);
     }
@@ -133,10 +131,8 @@ public class ProjectsController : ControllerBase
             id, userId.Value);
 
         if (!success)
-            return NotFound(new
-            {
-                message = "Projeto não encontrado."
-            });
+            return ApiErrors.NotFound(
+                "Projeto não encontrado.");
 
         return NoContent();
     }

@@ -40,6 +40,25 @@ public class TasksControllerTests
         };
     }
 
+    private static void AssertProblemDetails(
+        IActionResult result,
+        int expectedStatusCode)
+    {
+        var objectResult = Assert.IsType<ObjectResult>(result);
+
+        Assert.Equal(expectedStatusCode, objectResult.StatusCode);
+
+        var problem = Assert.IsType<ProblemDetails>(
+            objectResult.Value);
+
+        Assert.Equal(expectedStatusCode, problem.Status);
+        Assert.False(string.IsNullOrWhiteSpace(problem.Detail));
+
+        Assert.Contains(
+            "application/problem+json",
+            objectResult.ContentTypes);
+    }
+
     [Fact]
     public async Task GetAll_ShouldReturnUnauthorized_WhenUserMissing()
     {
@@ -74,7 +93,7 @@ public class TasksControllerTests
 
         var result = await controller.GetById(Guid.NewGuid());
 
-        Assert.IsType<NotFoundObjectResult>(result);
+        AssertProblemDetails(result, 404);
     }
 
     [Fact]
@@ -107,7 +126,7 @@ public class TasksControllerTests
             Title = ""
         });
 
-        Assert.IsType<BadRequestObjectResult>(result);
+        AssertProblemDetails(result, 400);
         Assert.False(service.WasCalled);
     }
 
@@ -147,7 +166,7 @@ public class TasksControllerTests
             Priority = TaskPriority.Medium
         });
 
-        Assert.IsType<NotFoundObjectResult>(result);
+        AssertProblemDetails(result, 404);
     }
 
     [Fact]
@@ -165,7 +184,7 @@ public class TasksControllerTests
                 Priority = TaskPriority.High
             });
 
-        Assert.IsType<NotFoundObjectResult>(result);
+        AssertProblemDetails(result, 404);
     }
 
     [Fact]
@@ -177,7 +196,7 @@ public class TasksControllerTests
 
         var result = await controller.Start(Guid.NewGuid());
 
-        Assert.IsType<NotFoundObjectResult>(result);
+        AssertProblemDetails(result, 404);
     }
 
     [Fact]
@@ -189,7 +208,7 @@ public class TasksControllerTests
 
         var result = await controller.Complete(Guid.NewGuid());
 
-        Assert.IsType<NotFoundObjectResult>(result);
+        AssertProblemDetails(result, 404);
     }
 
     [Fact]
@@ -201,7 +220,7 @@ public class TasksControllerTests
 
         var result = await controller.Cancel(Guid.NewGuid());
 
-        Assert.IsType<NotFoundObjectResult>(result);
+        AssertProblemDetails(result, 404);
     }
 
     private class FakeTaskService : ITaskService
@@ -246,6 +265,7 @@ public class TasksControllerTests
             Guid id, Guid ownerUserId)
         {
             Track(ownerUserId);
+
             return Task.FromResult<TaskResponseDto?>(null);
         }
 
@@ -262,6 +282,7 @@ public class TasksControllerTests
             Guid id, UpdateTaskDto dto, Guid ownerUserId)
         {
             Track(ownerUserId);
+
             return Task.FromResult<TaskResponseDto?>(null);
         }
 
@@ -269,6 +290,7 @@ public class TasksControllerTests
             Guid id, Guid ownerUserId)
         {
             Track(ownerUserId);
+
             return Task.FromResult<TaskResponseDto?>(null);
         }
 
@@ -276,6 +298,7 @@ public class TasksControllerTests
             Guid id, Guid ownerUserId)
         {
             Track(ownerUserId);
+
             return Task.FromResult<TaskResponseDto?>(null);
         }
 
@@ -283,6 +306,7 @@ public class TasksControllerTests
             Guid id, Guid ownerUserId)
         {
             Track(ownerUserId);
+
             return Task.FromResult<TaskResponseDto?>(null);
         }
     }

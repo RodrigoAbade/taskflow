@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+﻿
+using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using TaskFlow.Api.Controllers;
@@ -37,7 +38,7 @@ public class ProjectsControllerTests
         var result = await controller.Create(
             new CreateProjectDto { Name = "Projeto" });
 
-        Assert.IsType<UnauthorizedObjectResult>(result);
+        AssertProblemDetails(result, 401);
         Assert.False(service.CreateWasCalled);
     }
 
@@ -51,7 +52,7 @@ public class ProjectsControllerTests
         var result = await controller.Create(
             new CreateProjectDto { Name = "Projeto" });
 
-        Assert.IsType<UnauthorizedObjectResult>(result);
+        AssertProblemDetails(result, 401);
         Assert.False(service.CreateWasCalled);
     }
 
@@ -65,7 +66,7 @@ public class ProjectsControllerTests
         var result = await controller.Create(
             new CreateProjectDto { Name = " " });
 
-        Assert.IsType<BadRequestObjectResult>(result);
+        AssertProblemDetails(result, 400);
         Assert.False(service.CreateWasCalled);
     }
 
@@ -157,6 +158,24 @@ public class ProjectsControllerTests
         Assert.Null(service.ReceivedOwnerUserId);
     }
 
+    private static void AssertProblemDetails(
+        IActionResult result,
+        int expectedStatusCode)
+    {
+        var objectResult = Assert.IsType<ObjectResult>(result);
+
+        Assert.Equal(expectedStatusCode, objectResult.StatusCode);
+
+        var problem = Assert.IsType<ProblemDetails>(
+            objectResult.Value);
+
+        Assert.Equal(expectedStatusCode, problem.Status);
+        Assert.False(string.IsNullOrWhiteSpace(problem.Detail));
+        Assert.Contains(
+            "application/problem+json",
+            objectResult.ContentTypes);
+    }
+
     private static ProjectsController CreateController(
         IProjectService service,
         params Claim[] claims)
@@ -214,17 +233,27 @@ public class ProjectsControllerTests
             ReceivedOwnerUserId = ownerUserId;
 
             return Task.FromResult<ProjectResponseDto?>(
-                new ProjectResponseDto { Id = id, Name = "Projeto" });
+                new ProjectResponseDto
+                {
+                    Id = id,
+                    Name = "Projeto"
+                });
         }
 
         public Task<ProjectResponseDto?> UpdateAsync(
-            Guid id, UpdateProjectDto dto, Guid ownerUserId)
+            Guid id,
+            UpdateProjectDto dto,
+            Guid ownerUserId)
         {
             ReceivedProjectId = id;
             ReceivedOwnerUserId = ownerUserId;
 
             return Task.FromResult<ProjectResponseDto?>(
-                new ProjectResponseDto { Id = id, Name = dto.Name });
+                new ProjectResponseDto
+                {
+                    Id = id,
+                    Name = dto.Name
+                });
         }
 
         public Task<bool> DeactivateAsync(
