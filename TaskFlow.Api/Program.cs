@@ -22,6 +22,30 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
 // ========================================
+// CORS - INTEGRAÇÃO COM ANGULAR
+// ========================================
+
+const string corsPolicy = "TaskFlowFrontend";
+
+var allowedOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>() ?? Array.Empty<string>();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(corsPolicy, policy =>
+    {
+        if (allowedOrigins.Length > 0)
+        {
+            policy
+                .WithOrigins(allowedOrigins)
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        }
+    });
+});
+
+// ========================================
 // TRATAMENTO GLOBAL DE ERROS
 // ========================================
 
@@ -63,7 +87,7 @@ builder.Services.AddScoped<
     ITokenService, TokenService>();
 
 // ========================================
-// CONFIGURAÇÃO JWT
+// AUTENTICAÇÃO JWT
 // ========================================
 
 var jwtKey = builder.Configuration["Jwt:Key"]
@@ -145,12 +169,12 @@ builder.Services
 builder.Services.AddAuthorization();
 
 // ========================================
-// RATE LIMITING - PROTEÇÃO DO LOGIN
+// RATE LIMITING - LOGIN
 // ========================================
 
 builder.Services.AddRateLimiter(options =>
 {
-    // Limite de 5 tentativas por minuto, por IP
+    // Máximo de 5 tentativas por minuto, por IP
     options.AddPolicy("login", context =>
         RateLimitPartition.GetFixedWindowLimiter(
             partitionKey: context.Connection
@@ -171,7 +195,6 @@ builder.Services.AddRateLimiter(options =>
                     AutoReplenishment = true
                 }));
 
-    // Resposta HTTP para limite excedido
     options.RejectionStatusCode =
         StatusCodes.Status429TooManyRequests;
 
@@ -196,8 +219,9 @@ builder.Services.AddRateLimiter(options =>
 
         await response.WriteAsJsonAsync(
             problem,
-            options: new System.Text.Json.JsonSerializerOptions(
-                System.Text.Json.JsonSerializerDefaults.Web),
+            options:
+                new System.Text.Json.JsonSerializerOptions(
+                    System.Text.Json.JsonSerializerDefaults.Web),
             contentType: "application/problem+json",
             cancellationToken: cancellationToken);
     };
@@ -216,10 +240,23 @@ var app = builder.Build();
 // Tratamento global de exceções
 app.UseExceptionHandler();
 
-// Documentação OpenAPI
+// OpenAPI e Swagger UI
+// Disponíveis apenas em desenvolvimento
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint(
+            "/openapi/v1.json",
+            "TaskFlow API v1");
+
+        options.RoutePrefix = "swagger";
+
+        options.DocumentTitle =
+            "TaskFlow API - Swagger UI";
+    });
 }
 
 // Redirecionamento HTTPS
@@ -227,6 +264,10 @@ app.UseHttpsRedirection();
 
 // Roteamento
 app.UseRouting();
+
+// CORS - deve ficar depois do roteamento
+// e antes da autenticação e autorização
+app.UseCors(corsPolicy);
 
 // Proteção contra excesso de requisições
 app.UseRateLimiter();
