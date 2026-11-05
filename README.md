@@ -1,14 +1,14 @@
-# TaskFlow API
+# TaskFlow — Gerenciamento de Projetos e Tarefas
 
-**API REST para gerenciamento de projetos e tarefas, desenvolvida com C# e ASP.NET Core (.NET 10).**
+**Aplicação Full Stack em desenvolvimento, com backend C# / ASP.NET Core (.NET 10) e frontend Angular 22.**
 
-O TaskFlow utiliza arquitetura em camadas, Entity Framework Core, SQL Server e autenticação JWT, com foco em organização de código, segurança, regras de negócio e testes automatizados.
+O TaskFlow é uma aplicação para gerenciamento de projetos e tarefas. O backend utiliza arquitetura em camadas, Entity Framework Core, SQL Server e autenticação JWT, com foco em organização de código, segurança, regras de negócio e testes automatizados. O frontend Angular está em desenvolvimento e já possui autenticação integrada à API.
 
 **Status do projeto:**
 
 - **Backend: Concluído e validado localmente**
 - **Testes automatizados: 126 aprovados**
-- **Frontend Angular: Próxima etapa**
+- **Frontend Angular 22: Em desenvolvimento — login e proteção de rotas implementados**
 - **Deploy em produção: Pendente**
 
 ---
@@ -30,6 +30,8 @@ O TaskFlow utiliza arquitetura em camadas, Entity Framework Core, SQL Server e a
 - xUnit
 - WebApplicationFactory
 - EF Core InMemory para testes de integração
+- Angular 22, TypeScript e SCSS
+- Angular Reactive Forms, HttpClient, Interceptors e Guards
 - Git e GitHub
 
 ## Arquitetura
@@ -59,8 +61,18 @@ TaskFlow/
 │   ├── Migrations/
 │   └── Services/
 │
-└── xUnit/
-    └── Integration/
+├── xUnit/
+│   └── Integration/
+│
+└── taskflow-frontend/
+    ├── src/app/core/
+    │   ├── guards/
+    │   ├── interceptors/
+    │   └── services/
+    ├── src/app/features/
+    │   ├── auth/login/
+    │   └── dashboard/
+    └── src/app/shared/
 ```
 
 ### Responsabilidades das camadas
@@ -70,6 +82,7 @@ TaskFlow/
 - **Domain:** entidades e conceitos do domínio.
 - **Infrastructure:** persistência, acesso ao banco de dados e implementação dos serviços.
 - **Tests:** testes automatizados de regras de negócio, comportamento, segurança e integração.
+- **Frontend:** interface Angular com serviços, componentes, formulários reativos, roteamento e proteção de rotas.
 
 ---
 
@@ -117,6 +130,24 @@ TaskFlow/
 - CORS configurável por ambiente.
 - HTTPS validado no ambiente local.
 - Configurações JWT armazenadas em User Secrets durante o desenvolvimento.
+
+---
+
+## Frontend Angular — implementação atual
+
+O frontend está sendo desenvolvido em **Angular 22**, com **TypeScript** e **SCSS**, e já conta com:
+
+- Tela de login responsiva e minimalista.
+- Alternância entre tema claro e escuro.
+- Internacionalização inicial da interface em português, inglês e espanhol.
+- Formulário reativo com validação de e-mail e senha.
+- Integração do login com `POST /api/auth/login`.
+- Mensagens de sucesso e erro para tentativas de autenticação.
+- Armazenamento temporário do JWT em memória (a sessão não persiste após recarregar a página).
+- Interceptor HTTP para enviar o token Bearer às rotas da API que exigem autenticação.
+- `AuthGuard` protegendo a rota `/dashboard` e redirecionando usuários sem sessão válida para `/login`.
+
+**Em desenvolvimento:** redirecionamento após login, logout, interface definitiva do dashboard e telas de projetos e tarefas. O dashboard ainda não está concluído.
 
 ---
 
@@ -249,6 +280,7 @@ Em produção, será necessário configurar explicitamente o domínio do fronten
 - SQL Server
 - Visual Studio ou VS Code
 - Git
+- Node.js e npm compatíveis com Angular 22
 
 ### 1. Clonar o repositório
 
@@ -328,6 +360,18 @@ Swagger: https://localhost:7291/swagger
 
 As portas podem ser alteradas conforme o ambiente.
 
+### 7. Executar o frontend Angular
+
+Em outro terminal, na raiz do repositório:
+
+```powershell
+cd taskflow-frontend
+npm install
+npm start
+```
+
+Acesse `http://localhost:4200/login` com a API em execução. O proxy de desenvolvimento encaminha as requisições `/api` para `https://localhost:7291`; para isso, mantenha o certificado HTTPS de desenvolvimento configurado. O frontend ainda está em desenvolvimento e não foi publicado.
+
 ---
 
 ## Testes automatizados
@@ -394,14 +438,20 @@ A execução foi realizada localmente com .NET 10.
 - [x] Revisar configurações de desenvolvimento e segurança.
 - [x] Executar validação final com 126 testes aprovados.
 
-### Frontend e publicação — Próximas etapas
+### Frontend e publicação — Em andamento
 
-- [ ] Criar o frontend com Angular.
-- [ ] Implementar tela de login.
-- [ ] Implementar dashboard.
+- [x] Criar o frontend com Angular 22.
+- [x] Estruturar serviços, componentes e rotas.
+- [x] Implementar tela de login responsiva com validação.
+- [x] Adicionar temas claro/escuro e três idiomas.
+- [x] Integrar o login Angular à API .NET.
+- [x] Implementar gerenciamento inicial do JWT em memória.
+- [x] Configurar interceptor HTTP de autenticação.
+- [x] Implementar AuthGuard e validar redirecionamento para o login.
+- [ ] Redirecionar após login e implementar logout.
+- [ ] Concluir dashboard.
 - [ ] Criar interfaces de gerenciamento de projetos.
 - [ ] Criar interfaces de gerenciamento de tarefas.
-- [ ] Integrar frontend e backend.
 - [ ] Configurar o ambiente de produção.
 - [ ] Publicar a aplicação completa.
 
@@ -411,7 +461,7 @@ A execução foi realizada localmente com .NET 10.
 
 ## Objetivo do projeto
 
-O TaskFlow é um projeto de portfólio voltado ao desenvolvimento backend com .NET, demonstrando conhecimentos em:
+O TaskFlow é um projeto de portfólio Full Stack, com ênfase em desenvolvimento backend com .NET, demonstrando conhecimentos em:
 
 - Desenvolvimento de APIs REST.
 - Arquitetura de software e separação de responsabilidades.
@@ -421,9 +471,11 @@ O TaskFlow é um projeto de portfólio voltado ao desenvolvimento backend com .N
 - Segurança de aplicações.
 - Testes unitários e de integração.
 - Documentação de APIs.
+- Desenvolvimento frontend com Angular, TypeScript e SCSS.
+- Integração entre frontend e backend.
 - Versionamento com Git e GitHub.
 
-O próximo objetivo é transformar a API em uma aplicação web completa, utilizando Angular no frontend.
+O próximo objetivo é concluir o fluxo de autenticação no frontend e desenvolver o dashboard e as interfaces de projetos e tarefas.
 
 ---
 
