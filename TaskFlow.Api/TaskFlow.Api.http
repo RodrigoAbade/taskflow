@@ -1,4 +1,6 @@
+@token = PREENCHA_LOCALMENTE
 
+###
 POST https://localhost:7291/api/projects
 Content-Type: application/json
 
@@ -8,22 +10,18 @@ Content-Type: application/json
 }
 
 ###
-
 GET https://localhost:7291/api/projects
 Accept: application/json
 
 ###
-
 GET https://localhost:7291/api/projects/c720c6da-e5e0-4ae8-beb4-c8a368df2281
 Accept: application/json
 
 ###
-
 GET https://localhost:7291/api/projects/00000000-0000-0000-0000-000000000000
 Accept: application/json
 
 ###
-
 POST https://localhost:7291/api/projects
 Content-Type: application/json
 
@@ -57,7 +55,6 @@ Accept: application/json
 GET https://localhost:7291/api/projects/3a11f97f-1b60-4cf5-ad2b-2704a38c88f2
 Accept: application/json
 
-
 ### Criar primeira tarefa
 POST https://localhost:7291/api/tasks
 Content-Type: application/json
@@ -74,16 +71,14 @@ Content-Type: application/json
 GET https://localhost:7291/api/tasks/d08f7eb9-b4cd-4da4-9276-1d59845e28a1
 Accept: application/json
 
-
 ### Listar todas as tarefas
 GET https://localhost:7291/api/tasks
 Accept: application/json
 
-
 ### Listar tarefas de um projeto específico
 GET https://localhost:7291/api/tasks/project/c720c6da-e5e0-4ae8-beb4-c8a368df2281
 Accept: application/json
-  
+
 ### Atualizar tarefa existente
 PUT https://localhost:7291/api/tasks/d08f7eb9-b4cd-4da4-9276-1d59845e28a1
 Content-Type: application/json
@@ -99,21 +94,17 @@ Content-Type: application/json
 GET https://localhost:7291/api/tasks/d08f7eb9-b4cd-4da4-9276-1d59845e28a1
 Accept: application/json
 
-
 ### Iniciar tarefa
 PATCH https://localhost:7291/api/tasks/d08f7eb9-b4cd-4da4-9276-1d59845e28a1/start
 Accept: application/json
-
 
 ### Concluir tarefa
 PATCH https://localhost:7291/api/tasks/d08f7eb9-b4cd-4da4-9276-1d59845e28a1/complete
 Accept: application/json
 
-  
 ### Testar cancelamento de tarefa concluída
 PATCH https://localhost:7291/api/tasks/d08f7eb9-b4cd-4da4-9276-1d59845e28a1/cancel
 Accept: application/json
-
 
 ### Criar tarefa para testar cancelamento
 POST https://localhost:7291/api/tasks
@@ -127,11 +118,9 @@ Content-Type: application/json
   "dueDate": null
 }
 
-
 ### Cancelar tarefa pendente
 PATCH https://localhost:7291/api/tasks/0a1c5400-7251-41ab-a295-732597f7cb0a/cancel
 Accept: application/json
-
 
 ### Cadastrar primeiro usuário
 POST https://localhost:7291/api/users
@@ -142,16 +131,13 @@ Content-Type: application/json
   "email": "teste@example.com"
 }
 
-  
 ### Consultar usuário pelo ID
 GET https://localhost:7291/api/users/f3e4a3da-5ecd-40d2-aea9-71fbde1f60c9
 Accept: application/json
 
-  
 ### Listar todos os usuários
 GET https://localhost:7291/api/users
 Accept: application/json
-
 
 ### Testar cadastro com e-mail duplicado
 POST https://localhost:7291/api/users
@@ -162,16 +148,13 @@ Content-Type: application/json
   "email": "teste@example.com"
 }
 
-
 ### Desativar usuário
 DELETE https://localhost:7291/api/users/f3e4a3da-5ecd-40d2-aea9-71fbde1f60c9
 Accept: application/json
 
-
 ### Verificar usuário desativado
 GET https://localhost:7291/api/users/f3e4a3da-5ecd-40d2-aea9-71fbde1f60c9
 Accept: application/json
-
 
 ### Cadastrar usuário com senha
 POST https://localhost:7291/api/users
@@ -226,4 +209,129 @@ Content-Type: application/json
 ### GET projetos com JWT
 GET https://localhost:7291/api/projects
 Accept: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1MTUzZDdlZS04OGNjLTQxMWItYjQ1Yi0zZjczZWQzMWE5NjgiLCJlbWFpbCI6ImF1dGhAdGFza2Zsb3cuY29tIiwianRpIjoiZjExOWNhNGUtODQ0ZC00MWM3LWIzNjktYmU2ZTk5NTc0NDU3IiwiZXhwIjoxNzkzNzY0MDU0LCJpc3MiOiJUYXNrRmxvdy5BcGkiLCJhdWQiOiJUYXNrRmxvdy5DbGllbnQifQ.HiTLJ9rDt_Fc_ImqgEWfpAbHOUrHnfpP1XQuIz2Kgs8
+Authorization: Bearer {{token}}
+
+###
+GET https://localhost:7291/api/tasks
+Accept: application/json
+
+###
+GET https://localhost:7291/api/tasks
+Accept: application/json
+Authorization: Bearer {{token}}
+
+###
+GET https://localhost:7291/api/tasks
+Accept: application/json
+Authorization: Bearer token-invalido
+
+###
+GET https://localhost:7291/api/users
+Accept: application/json
+
+###
+GET https://localhost:7291/api/users
+Accept: application/json
+Authorization: Bearer {{token}}
+
+###
+POST https://localhost:7291/api/users
+Content-Type: application/json
+
+{
+  "name": "Teste Cadastro Público",
+  "email": "teste117@example.com",
+  "password": "Teste117@2026"
+}
+
+###
+POST https://localhost:7291/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "auth@taskflow.com",
+  "password": "TaskFlow@2026!"
+}
+
+###
+DELETE https://localhost:7291/api/users/f3e4a3da-5ecd-40d2-aea9-71fbde1f60c9
+Authorization: Bearer {{token}}
+
+###
+POST https://localhost:7291/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "teste117@example.com",
+  "password": "Teste117@2026"
+}
+
+###
+DELETE https://localhost:7291/api/users/89d97a8f-3d53-4b44-b1de-905a25609fdb
+Authorization: Bearer {{token}}
+
+###
+POST https://localhost:7291/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "teste117@example.com",
+  "password": "Teste117@2026"
+}
+
+###
+GET https://localhost:7291/api/projects
+Accept: application/json
+Authorization: Bearer {{token}}
+
+###
+POST https://localhost:7291/api/users
+Content-Type: application/json
+
+{
+  "name": "Teste Bloqueio JWT",
+  "email": "teste120@example.com",
+  "password": "Teste120@2026!"
+}
+
+###
+POST https://localhost:7291/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "teste120@example.com",
+  "password": "Teste120@2026!"
+}
+
+###
+DELETE https://localhost:7291/api/users/1639f0c1-c17b-49b4-b19f-b8c976407953
+Authorization: Bearer {{token}}
+
+###
+GET https://localhost:7291/api/projects
+Accept: application/json
+Authorization: Bearer {{token}}
+
+###
+GET https://localhost:7291/api/users/89d97a8f-3d53-4b44-b1de-905a25609fdb
+Accept: application/json
+Authorization: Bearer {{token}}
+
+###
+POST https://localhost:7291/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "auth@taskflow.com",
+  "password": "TaskFlow@2026!"
+}
+
+###
+GET https://localhost:7291/api/users/5153d7ee-88cc-411b-b45b-3f73ed31a968
+Accept: application/json
+Authorization: Bearer {{token}}
+
+###
+GET https://localhost:7291/api/users
+Accept: application/json
+Authorization: Bearer {{token}}

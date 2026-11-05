@@ -2,9 +2,11 @@
 using Microsoft.AspNetCore.Mvc;
 using TaskFlow.Application.DTOs.Users;
 using TaskFlow.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 
 namespace TaskFlow.Api.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/users")]
 public class UsersController : ControllerBase
@@ -17,9 +19,9 @@ public class UsersController : ControllerBase
     }
 
     // POST: api/users
+    [AllowAnonymous]
     [HttpPost]
-    public async Task<IActionResult> Create(
-        [FromBody] CreateUserDto dto)
+    public async Task<IActionResult> Create([FromBody] CreateUserDto dto)
     {
         if (string.IsNullOrWhiteSpace(dto.Name))
             return BadRequest(new
@@ -53,6 +55,7 @@ public class UsersController : ControllerBase
     }
 
     // GET: api/users
+    /*
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
@@ -60,11 +63,20 @@ public class UsersController : ControllerBase
 
         return Ok(users);
     }
+    */
 
     // GET: api/users/{id}
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
+        var userIdClaim = User.FindFirst("sub")?.Value;
+
+        if (!Guid.TryParse(userIdClaim, out var authenticatedUserId))
+            return Unauthorized();
+
+        if (id != authenticatedUserId)
+            return Forbid();
+
         var user = await _userService.GetByIdAsync(id);
 
         if (user is null)
@@ -80,14 +92,29 @@ public class UsersController : ControllerBase
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Deactivate(Guid id)
     {
-        var success = await _userService.DeactivateAsync(id);
+        var userIdClaim = User.FindFirst("sub")?.Value;
 
-        if (!success)
-            return NotFound(new
-            {
-                message = "Usuário não encontrado."
-            });
+        if (!Guid.TryParse(userIdClaim, out var authenticatedUserId))
+            return Unauthorized();
 
-        return NoContent();
+        if (id != authenticatedUserId)
+            return Forbid();
+
+        try
+        {
+            var success = await _userService.DeactivateAsync(id);
+
+            if (!success)
+                return NotFound(new
+                {
+                    message = "Usuário não encontrado."
+                });
+
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new { message = ex.Message });
+        }
     }
 }

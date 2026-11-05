@@ -45,6 +45,35 @@ builder.Services
     {
         options.MapInboundClaims = false;
 
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = async context =>
+            {
+                var userIdClaim = context.Principal?
+                    .FindFirst("sub")?.Value;
+
+                if (!Guid.TryParse(userIdClaim, out var userId))
+                {
+                    context.Fail("Token sem identificação válida.");
+                    return;
+                }
+
+                var dbContext = context.HttpContext.RequestServices
+                    .GetRequiredService<TaskFlowDbContext>();
+
+                var isActive = await dbContext.Users
+                    .AsNoTracking()
+                    .AnyAsync(
+                        user => user.Id == userId && user.IsActive,
+                        context.HttpContext.RequestAborted);
+
+                if (!isActive)
+                {
+                    context.Fail("Usuário inexistente ou desativado.");
+                }
+            }
+        };
+
         options.TokenValidationParameters =
             new TokenValidationParameters
             {
