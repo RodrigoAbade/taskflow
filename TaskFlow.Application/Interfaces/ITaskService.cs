@@ -5,31 +5,27 @@ namespace TaskFlow.Application.Interfaces;
 
 public interface ITaskService
 {
-    // Criar tarefa
     Task<TaskResponseDto> CreateAsync(
-        CreateTaskDto dto);
+        CreateTaskDto dto, Guid ownerUserId);
 
-    // Listar todas as tarefas
-    Task<IEnumerable<TaskResponseDto>> GetAllAsync();
+    Task<IEnumerable<TaskResponseDto>> GetAllAsync(
+        Guid ownerUserId);
 
-    // Buscar tarefa pelo ID
-    Task<TaskResponseDto?> GetByIdAsync(Guid id);
+    Task<TaskResponseDto?> GetByIdAsync(
+        Guid id, Guid ownerUserId);
 
-    // Listar tarefas de um projeto
     Task<IEnumerable<TaskResponseDto>> GetByProjectIdAsync(
-        Guid projectId);
+        Guid projectId, Guid ownerUserId);
 
-    // Atualizar tarefa
     Task<TaskResponseDto?> UpdateAsync(
-        Guid id,
-        UpdateTaskDto dto);
+        Guid id, UpdateTaskDto dto, Guid ownerUserId);
 
-    // Iniciar tarefa
-    Task<TaskResponseDto?> StartAsync(Guid id);
+    Task<TaskResponseDto?> StartAsync(
+        Guid id, Guid ownerUserId);
 
-    // Concluir tarefa
-    Task<TaskResponseDto?> CompleteAsync(Guid id);
+    Task<TaskResponseDto?> CompleteAsync(
+        Guid id, Guid ownerUserId);
 
-    // Cancelar tarefa
-    Task<TaskResponseDto?> CancelAsync(Guid id);
+    Task<TaskResponseDto?> CancelAsync(
+        Guid id, Guid ownerUserId);
 }

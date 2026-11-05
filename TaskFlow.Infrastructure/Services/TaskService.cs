@@ -16,16 +16,38 @@ public class TaskService : ITaskService
         _context = context;
     }
 
-    // Criar tarefa
-    public async Task<TaskResponseDto> CreateAsync(
-        CreateTaskDto dto)
+    private static void ValidateOwner(Guid ownerUserId)
     {
+        if (ownerUserId == Guid.Empty)
+            throw new ArgumentException(
+                "Usuário proprietário inválido.");
+    }
+
+    private IQueryable<TaskItem> OwnedTasks(
+        Guid ownerUserId)
+    {
+        ValidateOwner(ownerUserId);
+
+        return _context.Tasks.Where(t =>
+            _context.Projects.Any(p =>
+                p.Id == t.ProjectId &&
+                p.OwnerUserId == ownerUserId));
+    }
+
+    public async Task<TaskResponseDto> CreateAsync(
+        CreateTaskDto dto, Guid ownerUserId)
+    {
+        ValidateOwner(ownerUserId);
+
         var projectExists = await _context.Projects
-            .AnyAsync(p => p.Id == dto.ProjectId && p.IsActive);
+            .AnyAsync(p =>
+                p.Id == dto.ProjectId &&
+                p.OwnerUserId == ownerUserId &&
+                p.IsActive);
 
         if (!projectExists)
-            throw new ArgumentException(
-                "Projeto não encontrado ou inativo.");
+            throw new KeyNotFoundException(
+                "Projeto não encontrado.");
 
         var task = new TaskItem(
             dto.ProjectId,
@@ -35,16 +57,15 @@ public class TaskService : ITaskService
             dto.DueDate);
 
         _context.Tasks.Add(task);
-
         await _context.SaveChangesAsync();
 
         return MapToDto(task);
     }
 
-    // Listar todas as tarefas
-    public async Task<IEnumerable<TaskResponseDto>> GetAllAsync()
+    public async Task<IEnumerable<TaskResponseDto>> GetAllAsync(
+        Guid ownerUserId)
     {
-        var tasks = await _context.Tasks
+        var tasks = await OwnedTasks(ownerUserId)
             .AsNoTracking()
             .OrderByDescending(t => t.CreatedAt)
             .ToListAsync();
@@ -52,21 +73,21 @@ public class TaskService : ITaskService
         return tasks.Select(MapToDto).ToList();
     }
 
-    // Buscar tarefa pelo ID
-    public async Task<TaskResponseDto?> GetByIdAsync(Guid id)
+    public async Task<TaskResponseDto?> GetByIdAsync(
+        Guid id, Guid ownerUserId)
     {
-        var task = await _context.Tasks
+        var task = await OwnedTasks(ownerUserId)
             .AsNoTracking()
             .FirstOrDefaultAsync(t => t.Id == id);
 
         return task is null ? null : MapToDto(task);
     }
 
-    // Listar tarefas de um projeto
-    public async Task<IEnumerable<TaskResponseDto>> GetByProjectIdAsync(
-        Guid projectId)
+    public async Task<IEnumerable<TaskResponseDto>>
+        GetByProjectIdAsync(
+            Guid projectId, Guid ownerUserId)
     {
-        var tasks = await _context.Tasks
+        var tasks = await OwnedTasks(ownerUserId)
             .AsNoTracking()
             .Where(t => t.ProjectId == projectId)
             .OrderByDescending(t => t.CreatedAt)
@@ -77,35 +98,30 @@ public class TaskService : ITaskService
 
     public async Task<TaskResponseDto?> UpdateAsync(
         Guid id,
-        UpdateTaskDto dto)
+        UpdateTaskDto dto,
+        Guid ownerUserId)
     {
-        // Buscar a tarefa no banco de dados
-        var task = await _context.Tasks
+        var task = await OwnedTasks(ownerUserId)
             .FirstOrDefaultAsync(t => t.Id == id);
 
-        // Verificar se a tarefa existe
         if (task is null)
             return null;
 
-        // Aplicar as regras de negócio
         task.UpdateDetails(
             dto.Title,
             dto.Description,
             dto.Priority,
             dto.DueDate);
 
-        // Salvar as alterações no SQL Server
         await _context.SaveChangesAsync();
 
-        // Retornar a tarefa atualizada
         return MapToDto(task);
     }
 
-
-    // Iniciar uma tarefa
-    public async Task<TaskResponseDto?> StartAsync(Guid id)
+    public async Task<TaskResponseDto?> StartAsync(
+        Guid id, Guid ownerUserId)
     {
-        var task = await _context.Tasks
+        var task = await OwnedTasks(ownerUserId)
             .FirstOrDefaultAsync(t => t.Id == id);
 
         if (task is null)
@@ -118,10 +134,10 @@ public class TaskService : ITaskService
         return MapToDto(task);
     }
 
-    // Concluir uma tarefa
-    public async Task<TaskResponseDto?> CompleteAsync(Guid id)
+    public async Task<TaskResponseDto?> CompleteAsync(
+        Guid id, Guid ownerUserId)
     {
-        var task = await _context.Tasks
+        var task = await OwnedTasks(ownerUserId)
             .FirstOrDefaultAsync(t => t.Id == id);
 
         if (task is null)
@@ -134,10 +150,10 @@ public class TaskService : ITaskService
         return MapToDto(task);
     }
 
-    // Cancelar uma tarefa
-    public async Task<TaskResponseDto?> CancelAsync(Guid id)
+    public async Task<TaskResponseDto?> CancelAsync(
+        Guid id, Guid ownerUserId)
     {
-        var task = await _context.Tasks
+        var task = await OwnedTasks(ownerUserId)
             .FirstOrDefaultAsync(t => t.Id == id);
 
         if (task is null)
@@ -150,7 +166,6 @@ public class TaskService : ITaskService
         return MapToDto(task);
     }
 
-    // Converter entidade para DTO
     private static TaskResponseDto MapToDto(TaskItem task)
     {
         return new TaskResponseDto

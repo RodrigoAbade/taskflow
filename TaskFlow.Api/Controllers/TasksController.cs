@@ -1,14 +1,15 @@
 ﻿
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TaskFlow.Application.DTOs.Tasks;
 using TaskFlow.Application.Interfaces;
-using Microsoft.AspNetCore.Authorization;
 
 namespace TaskFlow.Api.Controllers;
 
 [Authorize]
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/tasks")]
 public class TasksController : ControllerBase
 {
     private readonly ITaskService _taskService;
@@ -18,25 +19,56 @@ public class TasksController : ControllerBase
         _taskService = taskService;
     }
 
-    // POST: api/tasks
+    private Guid? GetAuthenticatedUserId()
+    {
+        var claim = User.FindFirst(ClaimTypes.NameIdentifier)
+            ?? User.FindFirst("sub");
+
+        if (claim is null ||
+            !Guid.TryParse(claim.Value, out var userId) ||
+            userId == Guid.Empty)
+            return null;
+
+        return userId;
+    }
+
     [HttpPost]
     public async Task<IActionResult> Create(
         [FromBody] CreateTaskDto dto)
     {
+        var userId = GetAuthenticatedUserId();
+
+        if (userId is null)
+            return Unauthorized();
+
         if (dto.ProjectId == Guid.Empty)
-            return BadRequest("O projeto é obrigatório.");
+            return BadRequest(new
+            {
+                message = "O projeto é obrigatório."
+            });
 
         if (string.IsNullOrWhiteSpace(dto.Title))
-            return BadRequest("O título é obrigatório.");
+            return BadRequest(new
+            {
+                message = "O título é obrigatório."
+            });
 
         try
         {
-            var task = await _taskService.CreateAsync(dto);
+            var task = await _taskService.CreateAsync(
+                dto, userId.Value);
 
             return CreatedAtAction(
                 nameof(GetById),
                 new { id = task.Id },
                 task);
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new
+            {
+                message = "Projeto não encontrado."
+            });
         }
         catch (ArgumentException ex)
         {
@@ -44,20 +76,30 @@ public class TasksController : ControllerBase
         }
     }
 
-    // GET: api/tasks
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var tasks = await _taskService.GetAllAsync();
+        var userId = GetAuthenticatedUserId();
+
+        if (userId is null)
+            return Unauthorized();
+
+        var tasks = await _taskService.GetAllAsync(
+            userId.Value);
 
         return Ok(tasks);
     }
 
-    // GET: api/tasks/{id}
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
-        var task = await _taskService.GetByIdAsync(id);
+        var userId = GetAuthenticatedUserId();
+
+        if (userId is null)
+            return Unauthorized();
+
+        var task = await _taskService.GetByIdAsync(
+            id, userId.Value);
 
         if (task is null)
             return NotFound(new
@@ -68,23 +110,31 @@ public class TasksController : ControllerBase
         return Ok(task);
     }
 
-    // GET: api/tasks/project/{projectId}
     [HttpGet("project/{projectId:guid}")]
     public async Task<IActionResult> GetByProjectId(
         Guid projectId)
     {
-        var tasks = await _taskService
-            .GetByProjectIdAsync(projectId);
+        var userId = GetAuthenticatedUserId();
+
+        if (userId is null)
+            return Unauthorized();
+
+        var tasks = await _taskService.GetByProjectIdAsync(
+            projectId, userId.Value);
 
         return Ok(tasks);
     }
 
-    // PUT: api/tasks/{id}
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(
         Guid id,
         [FromBody] UpdateTaskDto dto)
     {
+        var userId = GetAuthenticatedUserId();
+
+        if (userId is null)
+            return Unauthorized();
+
         if (string.IsNullOrWhiteSpace(dto.Title))
             return BadRequest(new
             {
@@ -99,7 +149,8 @@ public class TasksController : ControllerBase
 
         try
         {
-            var task = await _taskService.UpdateAsync(id, dto);
+            var task = await _taskService.UpdateAsync(
+                id, dto, userId.Value);
 
             if (task is null)
                 return NotFound(new
@@ -119,14 +170,18 @@ public class TasksController : ControllerBase
         }
     }
 
-    // NOVO: Iniciar tarefa
-    // PATCH: api/tasks/{id}/start
     [HttpPatch("{id:guid}/start")]
     public async Task<IActionResult> Start(Guid id)
     {
+        var userId = GetAuthenticatedUserId();
+
+        if (userId is null)
+            return Unauthorized();
+
         try
         {
-            var task = await _taskService.StartAsync(id);
+            var task = await _taskService.StartAsync(
+                id, userId.Value);
 
             if (task is null)
                 return NotFound(new
@@ -142,14 +197,18 @@ public class TasksController : ControllerBase
         }
     }
 
-    // NOVO: Concluir tarefa
-    // PATCH: api/tasks/{id}/complete
     [HttpPatch("{id:guid}/complete")]
     public async Task<IActionResult> Complete(Guid id)
     {
+        var userId = GetAuthenticatedUserId();
+
+        if (userId is null)
+            return Unauthorized();
+
         try
         {
-            var task = await _taskService.CompleteAsync(id);
+            var task = await _taskService.CompleteAsync(
+                id, userId.Value);
 
             if (task is null)
                 return NotFound(new
@@ -165,14 +224,18 @@ public class TasksController : ControllerBase
         }
     }
 
-    // NOVO: Cancelar tarefa
-    // PATCH: api/tasks/{id}/cancel
     [HttpPatch("{id:guid}/cancel")]
     public async Task<IActionResult> Cancel(Guid id)
     {
+        var userId = GetAuthenticatedUserId();
+
+        if (userId is null)
+            return Unauthorized();
+
         try
         {
-            var task = await _taskService.CancelAsync(id);
+            var task = await _taskService.CancelAsync(
+                id, userId.Value);
 
             if (task is null)
                 return NotFound(new
