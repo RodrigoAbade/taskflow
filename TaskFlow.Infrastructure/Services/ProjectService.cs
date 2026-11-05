@@ -1,5 +1,4 @@
-﻿
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using TaskFlow.Application.DTOs.Projects;
 using TaskFlow.Application.Interfaces;
 using TaskFlow.Domain.Entities;
@@ -18,11 +17,13 @@ public class ProjectService : IProjectService
 
     // Criar projeto
     public async Task<ProjectResponseDto> CreateAsync(
-        CreateProjectDto dto)
+        CreateProjectDto dto,
+        Guid ownerUserId)
     {
         var project = new Project(
             dto.Name,
-            dto.Description ?? string.Empty);
+            dto.Description ?? string.Empty,
+            ownerUserId);
 
         _context.Projects.Add(project);
 

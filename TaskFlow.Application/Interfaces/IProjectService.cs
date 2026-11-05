@@ -1,12 +1,12 @@
-﻿
-using TaskFlow.Application.DTOs.Projects;
+﻿using TaskFlow.Application.DTOs.Projects;
 
 namespace TaskFlow.Application.Interfaces;
 
 public interface IProjectService
 {
     Task<ProjectResponseDto> CreateAsync(
-        CreateProjectDto dto);
+        CreateProjectDto dto,
+        Guid ownerUserId);
 
     Task<IEnumerable<ProjectResponseDto>> GetAllAsync();
 

@@ -1,17 +1,15 @@
-﻿
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TaskFlow.Application.DTOs.Projects;
 using TaskFlow.Application.Interfaces;
-using Microsoft.AspNetCore.Authorization;
 
 namespace TaskFlow.Api.Controllers;
-
 
 [ApiController]
 [Route("api/projects")]
 [Authorize]
 public class ProjectsController : ControllerBase
-
 {
     private readonly IProjectService _projectService;
 
@@ -32,7 +30,24 @@ public class ProjectsController : ControllerBase
             return BadRequest(
                 "O nome não pode ultrapassar 100 caracteres.");
 
-        var project = await _projectService.CreateAsync(dto);
+        // Identificar o usuário autenticado pelo JWT
+        var userIdClaim = User.FindFirst(
+            ClaimTypes.NameIdentifier)
+            ?? User.FindFirst("sub");
+
+        if (userIdClaim is null ||
+            !Guid.TryParse(userIdClaim.Value, out var ownerUserId) ||
+            ownerUserId == Guid.Empty)
+        {
+            return Unauthorized(new
+            {
+                message = "Token inválido: usuário não identificado."
+            });
+        }
+
+        var project = await _projectService.CreateAsync(
+            dto,
+            ownerUserId);
 
         return Created(
             $"/api/projects/{project.Id}",
@@ -83,7 +98,6 @@ public class ProjectsController : ControllerBase
             {
                 message = "Projeto não encontrado."
             });
-
 
         return Ok(project);
     }
