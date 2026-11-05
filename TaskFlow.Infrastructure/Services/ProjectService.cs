@@ -20,6 +20,8 @@ public class ProjectService : IProjectService
         CreateProjectDto dto,
         Guid ownerUserId)
     {
+        ValidateOwnerUserId(ownerUserId);
+
         var project = new Project(
             dto.Name,
             dto.Description ?? string.Empty,
@@ -32,23 +34,33 @@ public class ProjectService : IProjectService
         return MapToDto(project);
     }
 
-    // Listar todos os projetos
-    public async Task<IEnumerable<ProjectResponseDto>> GetAllAsync()
+    // Listar somente projetos do usuário autenticado
+    public async Task<IEnumerable<ProjectResponseDto>> GetAllAsync(
+        Guid ownerUserId)
     {
+        ValidateOwnerUserId(ownerUserId);
+
         var projects = await _context.Projects
             .AsNoTracking()
+            .Where(p => p.OwnerUserId == ownerUserId)
             .OrderBy(p => p.Name)
             .ToListAsync();
 
         return projects.Select(MapToDto).ToList();
     }
 
-    // Buscar projeto pelo ID
-    public async Task<ProjectResponseDto?> GetByIdAsync(Guid id)
+    // Buscar projeto pertencente ao usuário
+    public async Task<ProjectResponseDto?> GetByIdAsync(
+        Guid id,
+        Guid ownerUserId)
     {
+        ValidateOwnerUserId(ownerUserId);
+
         var project = await _context.Projects
             .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.Id == id);
+            .FirstOrDefaultAsync(p =>
+                p.Id == id &&
+                p.OwnerUserId == ownerUserId);
 
         if (project is null)
             return null;
@@ -56,13 +68,18 @@ public class ProjectService : IProjectService
         return MapToDto(project);
     }
 
-    // Atualizar projeto
+    // Atualizar somente projeto do proprietário
     public async Task<ProjectResponseDto?> UpdateAsync(
         Guid id,
-        UpdateProjectDto dto)
+        UpdateProjectDto dto,
+        Guid ownerUserId)
     {
+        ValidateOwnerUserId(ownerUserId);
+
         var project = await _context.Projects
-            .FirstOrDefaultAsync(p => p.Id == id);
+            .FirstOrDefaultAsync(p =>
+                p.Id == id &&
+                p.OwnerUserId == ownerUserId);
 
         if (project is null)
             return null;
@@ -77,11 +94,17 @@ public class ProjectService : IProjectService
         return MapToDto(project);
     }
 
-    // Desativar projeto
-    public async Task<bool> DeactivateAsync(Guid id)
+    // Desativar somente projeto do proprietário
+    public async Task<bool> DeactivateAsync(
+        Guid id,
+        Guid ownerUserId)
     {
+        ValidateOwnerUserId(ownerUserId);
+
         var project = await _context.Projects
-            .FirstOrDefaultAsync(p => p.Id == id);
+            .FirstOrDefaultAsync(p =>
+                p.Id == id &&
+                p.OwnerUserId == ownerUserId);
 
         if (project is null)
             return false;
@@ -91,6 +114,17 @@ public class ProjectService : IProjectService
         await _context.SaveChangesAsync();
 
         return true;
+    }
+
+    // Validar identificação do proprietário
+    private static void ValidateOwnerUserId(Guid ownerUserId)
+    {
+        if (ownerUserId == Guid.Empty)
+        {
+            throw new ArgumentException(
+                "O usuário proprietário é inválido.",
+                nameof(ownerUserId));
+        }
     }
 
     // Converter entidade para DTO

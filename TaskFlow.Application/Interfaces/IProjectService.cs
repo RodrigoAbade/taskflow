@@ -8,13 +8,19 @@ public interface IProjectService
         CreateProjectDto dto,
         Guid ownerUserId);
 
-    Task<IEnumerable<ProjectResponseDto>> GetAllAsync();
+    Task<IEnumerable<ProjectResponseDto>> GetAllAsync(
+        Guid ownerUserId);
 
-    Task<ProjectResponseDto?> GetByIdAsync(Guid id);
+    Task<ProjectResponseDto?> GetByIdAsync(
+        Guid id,
+        Guid ownerUserId);
 
     Task<ProjectResponseDto?> UpdateAsync(
         Guid id,
-        UpdateProjectDto dto);
+        UpdateProjectDto dto,
+        Guid ownerUserId);
 
-    Task<bool> DeactivateAsync(Guid id);
+    Task<bool> DeactivateAsync(
+        Guid id,
+        Guid ownerUserId);
 }

@@ -18,7 +18,21 @@ public class ProjectsController : ControllerBase
         _projectService = projectService;
     }
 
-    // POST: api/projects
+    private Guid? GetAuthenticatedUserId()
+    {
+        var claim = User.FindFirst(ClaimTypes.NameIdentifier)
+            ?? User.FindFirst("sub");
+
+        if (claim is null ||
+            !Guid.TryParse(claim.Value, out var userId) ||
+            userId == Guid.Empty)
+        {
+            return null;
+        }
+
+        return userId;
+    }
+
     [HttpPost]
     public async Task<IActionResult> Create(
         [FromBody] CreateProjectDto dto)
@@ -30,44 +44,44 @@ public class ProjectsController : ControllerBase
             return BadRequest(
                 "O nome não pode ultrapassar 100 caracteres.");
 
-        // Identificar o usuário autenticado pelo JWT
-        var userIdClaim = User.FindFirst(
-            ClaimTypes.NameIdentifier)
-            ?? User.FindFirst("sub");
+        var userId = GetAuthenticatedUserId();
 
-        if (userIdClaim is null ||
-            !Guid.TryParse(userIdClaim.Value, out var ownerUserId) ||
-            ownerUserId == Guid.Empty)
-        {
+        if (userId is null)
             return Unauthorized(new
             {
                 message = "Token inválido: usuário não identificado."
             });
-        }
 
         var project = await _projectService.CreateAsync(
-            dto,
-            ownerUserId);
+            dto, userId.Value);
 
-        return Created(
-            $"/api/projects/{project.Id}",
-            project);
+        return Created($"/api/projects/{project.Id}", project);
     }
 
-    // GET: api/projects
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var projects = await _projectService.GetAllAsync();
+        var userId = GetAuthenticatedUserId();
+
+        if (userId is null)
+            return Unauthorized();
+
+        var projects = await _projectService.GetAllAsync(
+            userId.Value);
 
         return Ok(projects);
     }
 
-    // GET: api/projects/{id}
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
-        var project = await _projectService.GetByIdAsync(id);
+        var userId = GetAuthenticatedUserId();
+
+        if (userId is null)
+            return Unauthorized();
+
+        var project = await _projectService.GetByIdAsync(
+            id, userId.Value);
 
         if (project is null)
             return NotFound(new
@@ -78,7 +92,6 @@ public class ProjectsController : ControllerBase
         return Ok(project);
     }
 
-    // PUT: api/projects/{id}
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(
         Guid id,
@@ -91,7 +104,13 @@ public class ProjectsController : ControllerBase
             return BadRequest(
                 "O nome não pode ultrapassar 100 caracteres.");
 
-        var project = await _projectService.UpdateAsync(id, dto);
+        var userId = GetAuthenticatedUserId();
+
+        if (userId is null)
+            return Unauthorized();
+
+        var project = await _projectService.UpdateAsync(
+            id, dto, userId.Value);
 
         if (project is null)
             return NotFound(new
@@ -102,19 +121,22 @@ public class ProjectsController : ControllerBase
         return Ok(project);
     }
 
-    // DELETE: api/projects/{id}
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Deactivate(Guid id)
     {
-        var success = await _projectService.DeactivateAsync(id);
+        var userId = GetAuthenticatedUserId();
+
+        if (userId is null)
+            return Unauthorized();
+
+        var success = await _projectService.DeactivateAsync(
+            id, userId.Value);
 
         if (!success)
-        {
             return NotFound(new
             {
                 message = "Projeto não encontrado."
             });
-        }
 
         return NoContent();
     }
