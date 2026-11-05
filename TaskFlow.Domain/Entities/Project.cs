@@ -1,4 +1,10 @@
-﻿namespace TaskFlow.Domain.Entities;
+// ============================================================
+// TaskFlow API
+// Autor: Rodrigo Abade Nunes
+// GitHub: https://github.com/RodrigoAbade
+// Projeto: https://github.com/RodrigoAbade/taskflow
+// ============================================================
+namespace TaskFlow.Domain.Entities;
 
 public class Project
 {

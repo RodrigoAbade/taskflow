@@ -1,4 +1,10 @@
-﻿
+// ============================================================
+// TaskFlow API
+// Autor: Rodrigo Abade Nunes
+// GitHub: https://github.com/RodrigoAbade
+// Projeto: https://github.com/RodrigoAbade/taskflow
+// ============================================================
+
 using Microsoft.AspNetCore.Identity;
 using TaskFlow.Application.Interfaces;
 using TaskFlow.Domain.Entities;

@@ -1,4 +1,10 @@
-﻿
+// ============================================================
+// TaskFlow API
+// Autor: Rodrigo Abade Nunes
+// GitHub: https://github.com/RodrigoAbade
+// Projeto: https://github.com/RodrigoAbade/taskflow
+// ============================================================
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using TaskFlow.Application.DTOs.Auth;

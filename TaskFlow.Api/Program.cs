@@ -1,3 +1,9 @@
+// ============================================================
+// TaskFlow API
+// Autor: Rodrigo Abade Nunes
+// GitHub: https://github.com/RodrigoAbade
+// Projeto: https://github.com/RodrigoAbade/taskflow
+// ============================================================
 
 using System;
 using System.Threading.RateLimiting;

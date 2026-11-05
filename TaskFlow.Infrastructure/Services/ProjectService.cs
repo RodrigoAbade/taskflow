@@ -1,4 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+// ============================================================
+// TaskFlow API
+// Autor: Rodrigo Abade Nunes
+// GitHub: https://github.com/RodrigoAbade
+// Projeto: https://github.com/RodrigoAbade/taskflow
+// ============================================================
+using Microsoft.EntityFrameworkCore;
 using TaskFlow.Application.DTOs.Projects;
 using TaskFlow.Application.Interfaces;
 using TaskFlow.Domain.Entities;

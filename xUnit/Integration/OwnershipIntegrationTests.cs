@@ -1,4 +1,10 @@
-﻿
+// ============================================================
+// TaskFlow API
+// Autor: Rodrigo Abade Nunes
+// GitHub: https://github.com/RodrigoAbade
+// Projeto: https://github.com/RodrigoAbade/taskflow
+// ============================================================
+
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
