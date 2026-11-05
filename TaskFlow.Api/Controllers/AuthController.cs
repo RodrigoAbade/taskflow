@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using TaskFlow.Application.DTOs.Auth;
 using TaskFlow.Application.Interfaces;
 using TaskFlow.Api.Helpers;
+using Microsoft.AspNetCore.Authorization;
 
 namespace TaskFlow.Api.Controllers;
 
@@ -23,6 +24,7 @@ public class AuthController : ControllerBase
     }
 
     // POST: api/auth/login
+    [AllowAnonymous]
     [EnableRateLimiting("login")]
     [HttpPost("login")]
     public async Task<IActionResult> Login(

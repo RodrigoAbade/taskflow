@@ -11,6 +11,7 @@ using TaskFlow.Api.Exceptions;
 using TaskFlow.Application.Interfaces;
 using TaskFlow.Infrastructure.Data;
 using TaskFlow.Infrastructure.Services;
+using TaskFlow.Api.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,8 +20,11 @@ var builder = WebApplication.CreateBuilder(args);
 // ========================================
 
 builder.Services.AddControllers();
-builder.Services.AddOpenApi();
-
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer<
+        JwtSecurityDocumentTransformer>();
+});
 // ========================================
 // CORS - INTEGRAÇÃO COM ANGULAR
 // ========================================
