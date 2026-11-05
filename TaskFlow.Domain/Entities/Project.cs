@@ -1,9 +1,9 @@
-﻿
-namespace TaskFlow.Domain.Entities;
+﻿namespace TaskFlow.Domain.Entities;
 
 public class Project
 {
     public Guid Id { get; private set; }
+    public Guid? OwnerUserId { get; private set; }
     public string Name { get; private set; }
     public string Description { get; private set; }
     public DateTime CreatedAt { get; private set; }
@@ -15,7 +15,10 @@ public class Project
         Description = string.Empty;
     }
 
-    public Project(string name, string description)
+    public Project(
+        string name,
+        string description,
+        Guid? ownerUserId = null)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException(
@@ -27,7 +30,13 @@ public class Project
                 "O nome não pode ultrapassar 100 caracteres.",
                 nameof(name));
 
+        if (ownerUserId == Guid.Empty)
+            throw new ArgumentException(
+                "O usuário proprietário é inválido.",
+                nameof(ownerUserId));
+
         Id = Guid.NewGuid();
+        OwnerUserId = ownerUserId;
         Name = name.Trim();
         Description = description?.Trim() ?? string.Empty;
         CreatedAt = DateTime.UtcNow;
