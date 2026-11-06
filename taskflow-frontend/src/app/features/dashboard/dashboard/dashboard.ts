@@ -7,7 +7,7 @@ import {
   signal
 } from '@angular/core';
 
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import {
   FormBuilder,
@@ -97,7 +97,7 @@ const modalTranslations: Record<
 
 @Component({
   selector: 'app-dashboard',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss'
 })

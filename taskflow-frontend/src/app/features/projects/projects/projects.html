@@ -1,0 +1,431 @@
+
+<div class="app-shell">
+
+  @if (mobileMenuOpen()) {
+    <button
+      class="sidebar-overlay"
+      type="button"
+      aria-label="Fechar menu"
+      (click)="closeMobileMenu()"
+    ></button>
+  }
+
+  <aside class="sidebar" [class.sidebar-open]="mobileMenuOpen()">
+    <div class="brand">
+      <div class="brand-mark">T</div>
+      <div class="brand-info">
+        <strong>TaskFlow</strong>
+        <span>Workspace</span>
+      </div>
+
+      <button
+        class="mobile-close"
+        type="button"
+        aria-label="Fechar menu"
+        (click)="closeMobileMenu()"
+      >
+        &times;
+      </button>
+    </div>
+
+    <div class="navigation-label">
+      {{ languageService.translate('navigation') }}
+    </div>
+
+    <nav class="sidebar-nav" aria-label="Navegação principal">
+      <a
+        class="nav-item"
+        routerLink="/dashboard"
+        (click)="closeMobileMenu()"
+      >
+        <span class="nav-icon">▦</span>
+        {{ languageService.translate('dashboard') }}
+      </a>
+
+      <a
+        class="nav-item active"
+        routerLink="/projects"
+        aria-current="page"
+        (click)="closeMobileMenu()"
+      >
+        <span class="nav-icon">▤</span>
+        {{ languageService.translate('projects') }}
+      </a>
+
+      <span class="nav-item nav-disabled">
+        <span class="nav-icon">☑</span>
+        {{ languageService.translate('tasks') }}
+      </span>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-divider"></div>
+      <button
+        class="nav-item logout-item"
+        type="button"
+        (click)="logout()"
+      >
+        <span class="nav-icon">↪</span>
+        {{ languageService.translate('logout') }}
+      </button>
+    </div>
+  </aside>
+
+  <div class="main-area">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button
+          class="menu-toggle"
+          type="button"
+          aria-label="Abrir menu"
+          (click)="toggleMobileMenu()"
+        >
+          ☰
+        </button>
+
+        <span class="breadcrumb">
+          {{ languageService.translate('workspace') }}
+          <span class="breadcrumb-divider">/</span>
+          <strong>{{ languageService.translate('projects') }}</strong>
+        </span>
+      </div>
+
+      <div class="topbar-actions">
+        <select
+          class="language-select"
+          [value]="languageService.language()"
+          [attr.aria-label]="languageService.translate('language')"
+          (change)="changeLanguage($event)"
+        >
+          <option value="pt">PT</option>
+          <option value="en">EN</option>
+          <option value="es">ES</option>
+        </select>
+
+        <button
+          class="theme-toggle"
+          type="button"
+          [attr.aria-label]="languageService.translate('theme')"
+          (click)="toggleTheme()"
+        >
+          @if (themeService.theme() === 'light') {
+            ☾
+          } @else {
+            ☀
+          }
+        </button>
+
+        <div class="user-avatar" aria-label="Usuário autenticado">
+          U
+        </div>
+      </div>
+    </header>
+
+    <main class="projects-content">
+      <div class="page-heading">
+        <div>
+          <span class="eyebrow">
+            TASKFLOW / {{ languageService.translate('projects') }}
+          </span>
+          <h1>{{ languageService.translate('projects') }}</h1>
+          <p>{{ t('subtitle') }}</p>
+        </div>
+
+        <button
+          class="primary-button"
+          type="button"
+          (click)="openCreate()"
+        >
+          + {{ languageService.translate('newProject') }}
+        </button>
+      </div>
+
+      @if (notice(); as message) {
+        <div class="notice" role="status">
+          <span>✓ {{ t(message) }}</span>
+          <button
+            type="button"
+            [attr.aria-label]="t('close')"
+            (click)="notice.set(null)"
+          >
+            &times;
+          </button>
+        </div>
+      }
+
+      <section class="summary-grid">
+        <article class="summary-card">
+          <span>{{ t('active') }}</span>
+          <strong>{{ loading() ? '—' : activeProjects().length }}</strong>
+        </article>
+
+        <article class="summary-card">
+          <span>{{ t('inactive') }}</span>
+          <strong>{{ loading() ? '—' : inactiveProjects().length }}</strong>
+        </article>
+
+        <article class="summary-card">
+          <span>{{ t('all') }}</span>
+          <strong>{{ loading() ? '—' : projects().length }}</strong>
+        </article>
+      </section>
+
+      <section class="projects-panel">
+        <div class="panel-header">
+          <div>
+            <h2>{{ languageService.translate('projects') }}</h2>
+            <p>{{ t('subtitle') }}</p>
+          </div>
+
+          <div class="filter-tabs" role="group">
+            <button
+              type="button"
+              [class.selected]="filter() === 'active'"
+              [attr.aria-pressed]="filter() === 'active'"
+              (click)="setFilter('active')"
+            >
+              {{ t('active') }}
+            </button>
+
+            <button
+              type="button"
+              [class.selected]="filter() === 'inactive'"
+              [attr.aria-pressed]="filter() === 'inactive'"
+              (click)="setFilter('inactive')"
+            >
+              {{ t('inactive') }}
+            </button>
+
+            <button
+              type="button"
+              [class.selected]="filter() === 'all'"
+              [attr.aria-pressed]="filter() === 'all'"
+              (click)="setFilter('all')"
+            >
+              {{ t('all') }}
+            </button>
+          </div>
+        </div>
+
+        @if (loading()) {
+          <div class="empty-state" role="status">
+            <p>{{ t('loading') }}</p>
+          </div>
+        } @else if (loadError()) {
+          <div class="empty-state" role="alert">
+            <div class="empty-icon">!</div>
+            <h3>{{ t('loadError') }}</h3>
+            <button
+              class="secondary-button"
+              type="button"
+              (click)="loadProjects()"
+            >
+              {{ t('retry') }}
+            </button>
+          </div>
+        } @else if (visibleProjects().length === 0) {
+          <div class="empty-state">
+            <div class="empty-icon">▤</div>
+            <h3>{{ t('empty') }}</h3>
+          </div>
+        } @else {
+          <div class="project-list">
+            @for (project of visibleProjects(); track project.id) {
+              <article class="project-row">
+                <div class="project-info">
+                  <div class="project-name-line">
+                    <h3>{{ project.name }}</h3>
+                    <span
+                      class="status"
+                      [class.inactive]="!project.isActive"
+                    >
+                      {{ project.isActive ? t('active') : t('inactive') }}
+                    </span>
+                  </div>
+
+                  <p>
+                    {{ project.description || t('noDescription') }}
+                  </p>
+
+                  <span class="project-date">
+                    {{ t('created') }} {{ formatDate(project.createdAt) }}
+                  </span>
+                </div>
+
+                @if (project.isActive) {
+                  <div class="project-actions">
+                    <button
+                      class="secondary-button"
+                      type="button"
+                      (click)="openEdit(project)"
+                    >
+                      {{ t('edit') }}
+                    </button>
+
+                    <button
+                      class="danger-button"
+                      type="button"
+                      (click)="requestDeactivate(project)"
+                    >
+                      {{ t('deactivate') }}
+                    </button>
+                  </div>
+                }
+              </article>
+            }
+          </div>
+        }
+      </section>
+    </main>
+  </div>
+
+  @if (modalOpen()) {
+    <div class="modal-backdrop" (click)="closeModal()">
+      <section
+        class="project-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="project-modal-title"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="modal-header">
+          <div>
+            <h2 id="project-modal-title">
+              {{ editingId() ? t('editTitle') : t('createTitle') }}
+            </h2>
+            <p>{{ t('subtitle') }}</p>
+          </div>
+
+          <button
+            class="modal-close"
+            type="button"
+            [disabled]="saving()"
+            [attr.aria-label]="t('close')"
+            (click)="closeModal()"
+          >
+            &times;
+          </button>
+        </div>
+
+        <form
+          class="project-form"
+          [formGroup]="projectForm"
+          (ngSubmit)="saveProject()"
+        >
+          <div class="form-field">
+            <label for="project-name">
+              {{ t('name') }} <span class="required">*</span>
+            </label>
+
+            <input
+              id="project-name"
+              type="text"
+              formControlName="name"
+              maxlength="100"
+              autocomplete="off"
+              [placeholder]="t('namePlaceholder')"
+            />
+
+            @if (
+              projectForm.controls.name.touched &&
+              !projectForm.controls.name.value.trim()
+            ) {
+              <small class="field-error">{{ t('nameRequired') }}</small>
+            } @else if (
+              projectForm.controls.name.touched &&
+              projectForm.controls.name.hasError('maxlength')
+            ) {
+              <small class="field-error">{{ t('nameTooLong') }}</small>
+            }
+          </div>
+
+          <div class="form-field">
+            <label for="project-description">{{ t('description') }}</label>
+            <textarea
+              id="project-description"
+              rows="4"
+              formControlName="description"
+              [placeholder]="t('descriptionPlaceholder')"
+            ></textarea>
+          </div>
+
+          @if (saveError()) {
+            <div class="form-alert" role="alert">{{ t('saveError') }}</div>
+          }
+
+          <div class="modal-actions">
+            <button
+              class="secondary-button"
+              type="button"
+              [disabled]="saving()"
+              (click)="closeModal()"
+            >
+              {{ t('cancel') }}
+            </button>
+
+            <button
+              class="primary-button"
+              type="submit"
+              [disabled]="saving()"
+            >
+              @if (saving()) {
+                {{ t('saving') }}
+              } @else {
+                {{ editingId() ? t('save') : t('create') }}
+              }
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
+  }
+
+  @if (confirmProject(); as project) {
+    <div class="modal-backdrop" (click)="closeConfirm()">
+      <section
+        class="project-modal confirm-modal"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="confirm-title"
+        aria-describedby="confirm-description"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="modal-header">
+          <div>
+            <h2 id="confirm-title">{{ t('confirmDeactivate') }}</h2>
+            <p id="confirm-description">
+              {{ t('confirmDescription') }}
+            </p>
+            <p class="confirm-name">{{ project.name }}</p>
+          </div>
+        </div>
+
+        @if (deactivateError()) {
+          <div class="confirm-error" role="alert">
+            {{ t('deactivateError') }}
+          </div>
+        }
+
+        <div class="modal-actions confirm-actions">
+          <button
+            class="secondary-button"
+            type="button"
+            [disabled]="deactivating()"
+            (click)="closeConfirm()"
+          >
+            {{ t('cancel') }}
+          </button>
+
+          <button
+            class="danger-solid-button"
+            type="button"
+            [disabled]="deactivating()"
+            (click)="deactivateProject()"
+          >
+            {{ t('confirm') }}
+          </button>
+        </div>
+      </section>
+    </div>
+  }
+</div>

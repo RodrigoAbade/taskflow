@@ -42,7 +42,7 @@
     >
       <a
         class="nav-item active"
-        href="/dashboard"
+        routerLink="/dashboard"
         aria-current="page"
         (click)="closeMobileMenu()"
       >
@@ -50,10 +50,14 @@
         {{ languageService.translate('dashboard') }}
       </a>
 
-      <span class="nav-item nav-disabled">
+      <a
+        class="nav-item"
+        routerLink="/projects"
+        (click)="closeMobileMenu()"
+      >
         <span class="nav-icon">▤</span>
         {{ languageService.translate('projects') }}
-      </span>
+      </a>
 
       <span class="nav-item nav-disabled">
         <span class="nav-icon">☑</span>

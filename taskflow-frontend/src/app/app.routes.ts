@@ -19,6 +19,14 @@ export const routes: Routes = [
     title: 'Dashboard | TaskFlow'
   },
   {
+    path: 'projects',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/projects/projects/projects')
+        .then(m => m.Projects),
+    title: 'Projetos | TaskFlow'
+  },
+  {
     path: '',
     redirectTo: 'login',
     pathMatch: 'full'
