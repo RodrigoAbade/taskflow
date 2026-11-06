@@ -135,6 +135,7 @@
 
     <main class="dashboard-content">
 
+      <!-- CABEÇALHO -->
       <div class="page-heading">
         <div>
           <span class="eyebrow">
@@ -150,7 +151,30 @@
             {{ languageService.translate('dashboardSubtitle') }}
           </p>
         </div>
+
+        <button
+          class="new-project-button"
+          type="button"
+          (click)="openCreateProject()"
+        >
+          + {{ languageService.translate('newProject') }}
+        </button>
       </div>
+
+      <!-- CONFIRMAÇÃO DE CADASTRO -->
+      @if (projectSuccess()) {
+        <div class="success-notice" role="status">
+          <span>✓ {{ modalText('createSuccess') }}</span>
+
+          <button
+            type="button"
+            [attr.aria-label]="modalText('close')"
+            (click)="dismissSuccess()"
+          >
+            &times;
+          </button>
+        </div>
+      }
 
       <!-- ESTATÍSTICAS -->
       <section
@@ -288,4 +312,125 @@
 
     </main>
   </div>
+
+  <!-- MODAL DE NOVO PROJETO -->
+  @if (createProjectModalOpen()) {
+    <div
+      class="modal-backdrop"
+      (click)="closeCreateProject()"
+    >
+      <section
+        class="project-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="create-project-title"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="modal-header">
+          <div>
+            <h2 id="create-project-title">
+              {{ modalText('createTitle') }}
+            </h2>
+
+            <p>{{ modalText('createSubtitle') }}</p>
+          </div>
+
+          <button
+            class="modal-close"
+            type="button"
+            [disabled]="projectSaving()"
+            [attr.aria-label]="modalText('close')"
+            (click)="closeCreateProject()"
+          >
+            &times;
+          </button>
+        </div>
+
+        <form
+          class="project-form"
+          [formGroup]="projectForm"
+          (ngSubmit)="createProject()"
+        >
+          <div class="form-field">
+            <label for="project-name">
+              {{ modalText('projectName') }}
+              <span class="required-mark">*</span>
+            </label>
+
+            <input
+              id="project-name"
+              type="text"
+              formControlName="name"
+              maxlength="100"
+              autocomplete="off"
+              [placeholder]="modalText('namePlaceholder')"
+              [attr.aria-invalid]="
+                projectForm.controls.name.touched &&
+                projectForm.controls.name.invalid
+              "
+            />
+
+            @if (
+              projectForm.controls.name.touched &&
+              !projectForm.controls.name.value.trim()
+            ) {
+              <small class="field-error">
+                {{ modalText('nameRequired') }}
+              </small>
+            } @else if (
+              projectForm.controls.name.touched &&
+              projectForm.controls.name.hasError('maxlength')
+            ) {
+              <small class="field-error">
+                {{ modalText('nameTooLong') }}
+              </small>
+            }
+          </div>
+
+          <div class="form-field">
+            <label for="project-description">
+              {{ modalText('projectDescription') }}
+            </label>
+
+            <textarea
+              id="project-description"
+              rows="4"
+              formControlName="description"
+              [placeholder]="modalText('descriptionPlaceholder')"
+            ></textarea>
+          </div>
+
+          @if (projectSaveError()) {
+            <div class="form-alert" role="alert">
+              {{ modalText('createError') }}
+            </div>
+          }
+
+          <div class="modal-actions">
+            <button
+              class="cancel-button"
+              type="button"
+              [disabled]="projectSaving()"
+              (click)="closeCreateProject()"
+            >
+              {{ modalText('cancel') }}
+            </button>
+
+            <button
+              class="submit-button"
+              type="submit"
+              [disabled]="projectSaving()"
+            >
+              @if (projectSaving()) {
+                {{ modalText('saving') }}
+              } @else {
+                {{ modalText('saveProject') }}
+              }
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
+  }
+
 </div>

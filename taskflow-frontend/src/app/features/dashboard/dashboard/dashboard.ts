@@ -8,6 +8,12 @@ import {
 } from '@angular/core';
 
 import { Router } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
+import {
+  FormBuilder,
+  ReactiveFormsModule,
+  Validators
+} from '@angular/forms';
 
 import {
   Language,
@@ -19,9 +25,79 @@ import { AuthService } from '../../../core/services/auth';
 import { ProjectService } from '../../../core/services/project';
 import { Project } from '../../../shared/models/project.model';
 
+type ModalTextKey =
+  | 'createTitle'
+  | 'createSubtitle'
+  | 'projectName'
+  | 'projectDescription'
+  | 'namePlaceholder'
+  | 'descriptionPlaceholder'
+  | 'nameRequired'
+  | 'nameTooLong'
+  | 'cancel'
+  | 'saveProject'
+  | 'saving'
+  | 'createError'
+  | 'createSuccess'
+  | 'close';
+
+const modalTranslations: Record<
+  Language,
+  Record<ModalTextKey, string>
+> = {
+  pt: {
+    createTitle: 'Novo projeto',
+    createSubtitle: 'Organize seu trabalho em um novo projeto.',
+    projectName: 'Nome do projeto',
+    projectDescription: 'Descrição',
+    namePlaceholder: 'Ex.: Meu novo projeto',
+    descriptionPlaceholder: 'Descreva o objetivo do projeto...',
+    nameRequired: 'Informe o nome do projeto.',
+    nameTooLong: 'O nome deve ter no máximo 100 caracteres.',
+    cancel: 'Cancelar',
+    saveProject: 'Criar projeto',
+    saving: 'Salvando...',
+    createError: 'Não foi possível criar o projeto. Tente novamente.',
+    createSuccess: 'Projeto criado com sucesso!',
+    close: 'Fechar'
+  },
+  en: {
+    createTitle: 'New project',
+    createSubtitle: 'Organize your work in a new project.',
+    projectName: 'Project name',
+    projectDescription: 'Description',
+    namePlaceholder: 'E.g. My new project',
+    descriptionPlaceholder: 'Describe the project goal...',
+    nameRequired: 'Enter a project name.',
+    nameTooLong: 'The name must have at most 100 characters.',
+    cancel: 'Cancel',
+    saveProject: 'Create project',
+    saving: 'Saving...',
+    createError: 'Could not create the project. Please try again.',
+    createSuccess: 'Project created successfully!',
+    close: 'Close'
+  },
+  es: {
+    createTitle: 'Nuevo proyecto',
+    createSubtitle: 'Organiza tu trabajo en un nuevo proyecto.',
+    projectName: 'Nombre del proyecto',
+    projectDescription: 'Descripción',
+    namePlaceholder: 'Ej.: Mi nuevo proyecto',
+    descriptionPlaceholder: 'Describe el objetivo del proyecto...',
+    nameRequired: 'Introduce el nombre del proyecto.',
+    nameTooLong: 'El nombre debe tener como máximo 100 caracteres.',
+    cancel: 'Cancelar',
+    saveProject: 'Crear proyecto',
+    saving: 'Guardando...',
+    createError: 'No se pudo crear el proyecto. Inténtalo de nuevo.',
+    createSuccess: '¡Proyecto creado correctamente!',
+    close: 'Cerrar'
+  }
+};
+
 @Component({
   selector: 'app-dashboard',
-  imports: [],
+  imports: [ReactiveFormsModule],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss'
 })
@@ -32,12 +108,29 @@ export class Dashboard implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly projectService = inject(ProjectService);
   private readonly router = inject(Router);
+  private readonly formBuilder = inject(FormBuilder);
 
   readonly mobileMenuOpen = signal(false);
 
   readonly projects = signal<Project[]>([]);
   readonly projectsLoading = signal(true);
   readonly projectsError = signal(false);
+
+  readonly createProjectModalOpen = signal(false);
+  readonly projectSaving = signal(false);
+  readonly projectSaveError = signal(false);
+  readonly projectSuccess = signal(false);
+
+  readonly projectForm = this.formBuilder.nonNullable.group({
+    name: [
+      '',
+      [
+        Validators.required,
+        Validators.maxLength(100)
+      ]
+    ],
+    description: ['']
+  });
 
   readonly activeProjects = computed(() =>
     this.projects().filter(project => project.isActive)
@@ -64,6 +157,12 @@ export class Dashboard implements OnInit {
     this.loadProjects();
   }
 
+  modalText(key: ModalTextKey): string {
+    return modalTranslations[
+      this.languageService.language()
+    ][key];
+  }
+
   private loadProjects(): void {
     this.projectsLoading.set(true);
     this.projectsError.set(false);
@@ -76,11 +175,85 @@ export class Dashboard implements OnInit {
 
       error: (error) => {
         console.error('Erro ao carregar projetos:', error);
-
         this.projectsError.set(true);
         this.projectsLoading.set(false);
       }
     });
+  }
+
+  openCreateProject(): void {
+    this.projectForm.reset();
+    this.projectSaveError.set(false);
+    this.projectSuccess.set(false);
+    this.createProjectModalOpen.set(true);
+  }
+
+  closeCreateProject(): void {
+    if (this.projectSaving()) {
+      return;
+    }
+
+    this.createProjectModalOpen.set(false);
+    this.projectSaveError.set(false);
+    this.projectForm.reset();
+  }
+
+  createProject(): void {
+    if (this.projectSaving()) {
+      return;
+    }
+
+    const name = this.projectForm.controls.name.value.trim();
+    const description =
+      this.projectForm.controls.description.value.trim();
+
+    this.projectForm.controls.name.setValue(name);
+
+    if (!name || name.length > 100) {
+      this.projectForm.controls.name.markAsTouched();
+      return;
+    }
+
+    if (this.projectForm.invalid) {
+      this.projectForm.markAllAsTouched();
+      return;
+    }
+
+    this.projectSaving.set(true);
+    this.projectSaveError.set(false);
+
+    this.projectService.create({
+      name,
+      description
+    }).subscribe({
+      next: (project) => {
+        this.projectSaving.set(false);
+        this.createProjectModalOpen.set(false);
+        this.projectForm.reset();
+
+        this.projects.update(current => {
+          const withoutDuplicate = current.filter(
+            item => item.id !== project.id
+          );
+
+          return [project, ...withoutDuplicate];
+        });
+
+        this.projectsError.set(false);
+        this.projectsLoading.set(false);
+        this.projectSuccess.set(true);
+      },
+
+      error: (error: HttpErrorResponse) => {
+        console.error('Erro ao criar projeto:', error);
+        this.projectSaving.set(false);
+        this.projectSaveError.set(true);
+      }
+    });
+  }
+
+  dismissSuccess(): void {
+    this.projectSuccess.set(false);
   }
 
   formatDate(date: string): string {
@@ -126,6 +299,7 @@ export class Dashboard implements OnInit {
   logout(): void {
     this.authService.logout();
     this.projects.set([]);
+    this.createProjectModalOpen.set(false);
 
     void this.router.navigate(['/login']);
   }
