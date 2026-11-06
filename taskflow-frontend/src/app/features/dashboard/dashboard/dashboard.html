@@ -1,1 +1,291 @@
-<p>dashboard works!</p>
+
+<div class="app-shell">
+
+  @if (mobileMenuOpen()) {
+    <button
+      class="sidebar-overlay"
+      type="button"
+      aria-label="Fechar menu"
+      (click)="closeMobileMenu()"
+    ></button>
+  }
+
+  <aside
+    class="sidebar"
+    [class.sidebar-open]="mobileMenuOpen()"
+  >
+    <div class="brand">
+      <div class="brand-mark">T</div>
+
+      <div class="brand-info">
+        <strong>TaskFlow</strong>
+        <span>Workspace</span>
+      </div>
+
+      <button
+        class="mobile-close"
+        type="button"
+        aria-label="Fechar menu"
+        (click)="closeMobileMenu()"
+      >
+        &times;
+      </button>
+    </div>
+
+    <div class="navigation-label">
+      {{ languageService.translate('navigation') }}
+    </div>
+
+    <nav
+      class="sidebar-nav"
+      aria-label="Navegação principal"
+    >
+      <a
+        class="nav-item active"
+        href="/dashboard"
+        aria-current="page"
+        (click)="closeMobileMenu()"
+      >
+        <span class="nav-icon">▦</span>
+        {{ languageService.translate('dashboard') }}
+      </a>
+
+      <span class="nav-item nav-disabled">
+        <span class="nav-icon">▤</span>
+        {{ languageService.translate('projects') }}
+      </span>
+
+      <span class="nav-item nav-disabled">
+        <span class="nav-icon">☑</span>
+        {{ languageService.translate('tasks') }}
+      </span>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-divider"></div>
+
+      <button
+        class="nav-item logout-item"
+        type="button"
+        (click)="logout()"
+      >
+        <span class="nav-icon">↪</span>
+        {{ languageService.translate('logout') }}
+      </button>
+    </div>
+  </aside>
+
+  <div class="main-area">
+
+    <header class="topbar">
+      <div class="topbar-left">
+        <button
+          class="menu-toggle"
+          type="button"
+          aria-label="Abrir menu"
+          (click)="toggleMobileMenu()"
+        >
+          ☰
+        </button>
+
+        <span class="breadcrumb">
+          {{ languageService.translate('workspace') }}
+
+          <span class="breadcrumb-divider">/</span>
+
+          <strong>
+            {{ languageService.translate('dashboard') }}
+          </strong>
+        </span>
+      </div>
+
+      <div class="topbar-actions">
+        <select
+          class="language-select"
+          [value]="languageService.language()"
+          [attr.aria-label]="languageService.translate('language')"
+          (change)="changeLanguage($event)"
+        >
+          <option value="pt">PT</option>
+          <option value="en">EN</option>
+          <option value="es">ES</option>
+        </select>
+
+        <button
+          class="theme-toggle"
+          type="button"
+          [attr.aria-label]="languageService.translate('theme')"
+          (click)="toggleTheme()"
+        >
+          @if (themeService.theme() === 'light') {
+            ☾
+          } @else {
+            ☀
+          }
+        </button>
+
+        <div
+          class="user-avatar"
+          aria-label="Usuário autenticado"
+        >
+          U
+        </div>
+      </div>
+    </header>
+
+    <main class="dashboard-content">
+
+      <div class="page-heading">
+        <div>
+          <span class="eyebrow">
+            TASKFLOW /
+            {{ languageService.translate('overview') }}
+          </span>
+
+          <h1>
+            {{ languageService.translate('dashboard') }}
+          </h1>
+
+          <p>
+            {{ languageService.translate('dashboardSubtitle') }}
+          </p>
+        </div>
+      </div>
+
+      <!-- ESTATÍSTICAS -->
+      <section
+        class="stats-grid"
+        [attr.aria-label]="languageService.translate('overview')"
+      >
+        @for (stat of statistics; track stat.key) {
+          <article class="stat-card">
+
+            <div class="stat-top">
+              <span class="stat-label">
+                {{ languageService.translate(stat.key) }}
+              </span>
+
+              <span class="stat-icon">
+                @switch (stat.icon) {
+                  @case ('folder') { ▤ }
+                  @case ('tasks') { ☷ }
+                  @case ('progress') { ◷ }
+                  @case ('completed') { ✓ }
+                }
+              </span>
+            </div>
+
+            <div class="stat-value">
+              @if (stat.key === 'totalProjects') {
+                @if (projectsLoading()) {
+                  …
+                } @else if (projectsError()) {
+                  —
+                } @else {
+                  {{ activeProjects().length }}
+                }
+              } @else {
+                —
+              }
+            </div>
+
+            <div class="stat-bottom">
+              {{ languageService.translate('overview') }}
+            </div>
+
+          </article>
+        }
+      </section>
+
+      <!-- PROJETOS RECENTES -->
+      <section class="projects-section">
+
+        <div class="section-header">
+          <div>
+            <h2>
+              {{ languageService.translate('recentProjects') }}
+            </h2>
+
+            <p>
+              {{ languageService.translate('projects') }}
+            </p>
+          </div>
+        </div>
+
+        @if (projectsLoading()) {
+
+          <div class="empty-state" role="status">
+            <p>
+              @switch (languageService.language()) {
+                @case ('en') { Loading projects... }
+                @case ('es') { Cargando proyectos... }
+                @default { Carregando projetos... }
+              }
+            </p>
+          </div>
+
+        } @else if (projectsError()) {
+
+          <div class="empty-state" role="alert">
+            <div class="empty-icon">!</div>
+
+            <h3>
+              @switch (languageService.language()) {
+                @case ('en') { Could not load projects. }
+                @case ('es') { No se pudieron cargar los proyectos. }
+                @default { Não foi possível carregar os projetos. }
+              }
+            </h3>
+
+            <p>
+              @switch (languageService.language()) {
+                @case ('en') { Check your API connection. }
+                @case ('es') { Comprueba la conexión con la API. }
+                @default { Verifique a conexão com a API. }
+              }
+            </p>
+          </div>
+
+        } @else if (recentProjects().length === 0) {
+
+          <div class="empty-state">
+            <div class="empty-icon">▤</div>
+
+            <h3>
+              {{ languageService.translate('noProjects') }}
+            </h3>
+
+            <p>
+              {{ languageService.translate('dashboardSubtitle') }}
+            </p>
+          </div>
+
+        } @else {
+
+          <div class="recent-projects-list">
+            @for (project of recentProjects(); track project.id) {
+
+              <article class="recent-project">
+                <div class="project-details">
+                  <h3>{{ project.name }}</h3>
+
+                  @if (project.description) {
+                    <p>{{ project.description }}</p>
+                  }
+                </div>
+
+                <span class="project-date">
+                  {{ formatDate(project.createdAt) }}
+                </span>
+              </article>
+
+            }
+          </div>
+
+        }
+
+      </section>
+
+    </main>
+  </div>
+</div>

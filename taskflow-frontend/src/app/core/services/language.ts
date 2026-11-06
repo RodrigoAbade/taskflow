@@ -13,7 +13,26 @@ type TranslationKey =
   | 'loginButton'
   | 'loginFooter'
   | 'language'
-  | 'theme';
+  | 'theme'
+  | 'dashboard'
+  | 'overview'
+  | 'projects'
+  | 'tasks'
+  | 'inProgress'
+  | 'completed'
+  | 'recentProjects'
+  | 'noProjects'
+  | 'dashboardSubtitle'
+  | 'totalProjects'
+  | 'totalTasks'
+  | 'logout'
+  | 'settings'
+  | 'lightTheme'
+  | 'darkTheme'
+  | 'newProject'
+  | 'viewAll'
+  | 'navigation'
+  | 'workspace';
 
 const translations: Record<
   Language,
@@ -29,7 +48,27 @@ const translations: Record<
     loginButton: 'Entrar',
     loginFooter: 'Organize seu trabalho. Simplifique seu dia.',
     language: 'Idioma',
-    theme: 'Tema'
+    theme: 'Tema',
+
+    dashboard: 'Dashboard',
+    overview: 'Visão geral',
+    projects: 'Projetos',
+    tasks: 'Tarefas',
+    inProgress: 'Em andamento',
+    completed: 'Concluídas',
+    recentProjects: 'Projetos recentes',
+    noProjects: 'Nenhum projeto encontrado.',
+    dashboardSubtitle: 'Acompanhe seus projetos e tarefas em um só lugar.',
+    totalProjects: 'Total de projetos',
+    totalTasks: 'Total de tarefas',
+    logout: 'Sair da conta',
+    settings: 'Configurações',
+    lightTheme: 'Tema claro',
+    darkTheme: 'Tema escuro',
+    newProject: 'Novo projeto',
+    viewAll: 'Ver todos',
+    navigation: 'Navegação',
+    workspace: 'Área de trabalho'
   },
 
   en: {
@@ -42,7 +81,27 @@ const translations: Record<
     loginButton: 'Sign in',
     loginFooter: 'Organize your work. Simplify your day.',
     language: 'Language',
-    theme: 'Theme'
+    theme: 'Theme',
+
+    dashboard: 'Dashboard',
+    overview: 'Overview',
+    projects: 'Projects',
+    tasks: 'Tasks',
+    inProgress: 'In progress',
+    completed: 'Completed',
+    recentProjects: 'Recent projects',
+    noProjects: 'No projects found.',
+    dashboardSubtitle: 'Track your projects and tasks in one place.',
+    totalProjects: 'Total projects',
+    totalTasks: 'Total tasks',
+    logout: 'Sign out',
+    settings: 'Settings',
+    lightTheme: 'Light theme',
+    darkTheme: 'Dark theme',
+    newProject: 'New project',
+    viewAll: 'View all',
+    navigation: 'Navigation',
+    workspace: 'Workspace'
   },
 
   es: {
@@ -55,7 +114,27 @@ const translations: Record<
     loginButton: 'Iniciar sesión',
     loginFooter: 'Organiza tu trabajo. Simplifica tu día.',
     language: 'Idioma',
-    theme: 'Tema'
+    theme: 'Tema',
+
+    dashboard: 'Panel',
+    overview: 'Resumen',
+    projects: 'Proyectos',
+    tasks: 'Tareas',
+    inProgress: 'En progreso',
+    completed: 'Completadas',
+    recentProjects: 'Proyectos recientes',
+    noProjects: 'No se encontraron proyectos.',
+    dashboardSubtitle: 'Gestiona tus proyectos y tareas en un solo lugar.',
+    totalProjects: 'Total de proyectos',
+    totalTasks: 'Total de tareas',
+    logout: 'Cerrar sesión',
+    settings: 'Configuración',
+    lightTheme: 'Tema claro',
+    darkTheme: 'Tema oscuro',
+    newProject: 'Nuevo proyecto',
+    viewAll: 'Ver todos',
+    navigation: 'Navegación',
+    workspace: 'Espacio de trabajo'
   }
 };
 

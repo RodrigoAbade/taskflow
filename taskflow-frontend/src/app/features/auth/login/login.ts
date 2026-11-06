@@ -1,17 +1,21 @@
 
 import { Component, inject, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
+import { Router } from '@angular/router';
+
 import {
   FormBuilder,
   ReactiveFormsModule,
   Validators
 } from '@angular/forms';
+
 import { finalize } from 'rxjs';
 
 import {
   Language,
   LanguageService
 } from '../../../core/services/language';
+
 import { ThemeService } from '../../../core/services/theme';
 import { AuthService } from '../../../core/services/auth';
 
@@ -27,6 +31,7 @@ export class Login {
 
   private readonly authService = inject(AuthService);
   private readonly fb = inject(FormBuilder);
+  private readonly router = inject(Router);
 
   readonly loading = signal(false);
   readonly errorMessage = signal('');
@@ -63,7 +68,10 @@ export class Login {
 
   changeLanguage(event: Event): void {
     const select = event.target as HTMLSelectElement;
-    this.languageService.setLanguage(select.value as Language);
+
+    this.languageService.setLanguage(
+      select.value as Language
+    );
   }
 
   toggleTheme(): void {
@@ -89,22 +97,27 @@ export class Login {
       return;
     }
 
-    if (this.loading()) return;
+    if (this.loading()) {
+      return;
+    }
 
     this.loading.set(true);
 
     this.authService.login(this.form.getRawValue())
-      .pipe(finalize(() => this.loading.set(false)))
+      .pipe(
+        finalize(() => this.loading.set(false))
+      )
       .subscribe({
-        next: (response) => {
-          console.log('Autenticação concluída.');
-
+        next: () => {
           this.successMessage.set(
-            this.messages[this.languageService.language()].success
+            this.messages[
+              this.languageService.language()
+            ].success
           );
 
-          // Na próxima etapa, trataremos o token JWT
-          // e o redirecionamento para o dashboard.
+          // O AuthService já armazenou o JWT em memória.
+          // Redireciona para a rota protegida.
+          void this.router.navigate(['/dashboard']);
         },
 
         error: (error: HttpErrorResponse) => {
